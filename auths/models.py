@@ -69,6 +69,11 @@ class CustomUser(
         blank=True,
         null=True
     )
+    blocked_users = models.ManyToManyField(
+        "self",
+        blank=True,
+        null=True
+    )
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 

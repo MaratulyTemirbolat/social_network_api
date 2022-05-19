@@ -1,4 +1,3 @@
-from argparse import ONE_OR_MORE
 from django.db import models
 
 from abstracts.models import AbstractDateTime
@@ -62,6 +61,7 @@ class Privilege(AbstractDateTime):  # noqa
     MAX_PRIVILEGE_NAME = 50
     name = models.CharField(
         verbose_name="Наименование",
+        unique=True,
         max_length=MAX_PRIVILEGE_NAME
     )
 
@@ -70,7 +70,13 @@ class Position(AbstractDateTime):  # noqa
     MAX_POSITION_NAME = 50
     name = models.CharField(
         verbose_name="Наименование",
+        unique=True,
         max_length=MAX_POSITION_NAME
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        verbose_name="Url"
     )
     privileges = models.ManyToManyField(
         to=Privilege,
@@ -82,7 +88,13 @@ class ComplainReason(AbstractDateTime):  # noqa
     MAX_COMPLAIN_NAME = 100
     name = models.CharField(
         max_length=MAX_COMPLAIN_NAME,
+        unique=True,
         verbose_name="Наименование"
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        verbose_name="Url"
     )
 
 
@@ -101,4 +113,66 @@ class Complain(AbstractDateTime):  # noqa
     )
     content = models.TextField(
         verbose_name="Текст"
+    )
+
+
+class Tag(AbstractDateTime):  # noqa
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name="Наименование"
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        verbose_name="Url"
+    )
+
+
+class Category(AbstractDateTime):  # noqa
+    title = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Наименование"
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        verbose_name="Url"
+    )
+
+
+class Group(AbstractDateTime):  # noqa
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Название группы"
+    )
+    followers = models.ManyToManyField(
+        to=CustomUser,
+        related_name="groups",
+        blank=True
+    )
+    members_rights = models.ManyToManyField(
+        to=CustomUser,
+        through="GroupAdministration",
+        through_fields=("user", "group"),
+        related_name="group_rights"
+    )
+
+
+class GroupAdministration(AbstractDateTime):  # noqa
+    user = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.RESTRICT,
+        verbose_name="Пользователь группы"
+    )
+    group = models.ForeignKey(
+        to=Group,
+        on_delete=models.RESTRICT,
+        verbose_name="Группа"
+    )
+    position = models.ForeignKey(
+        to=Position,
+        on_delete=models.RESTRICT,
+        verbose_name="Статус"
     )
