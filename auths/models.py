@@ -83,19 +83,19 @@ class CustomUser(
         verbose_name='Почта/Логин'
     )
     is_active = models.BooleanField(
-        'Активность',
-        default=True
+        default=True,
+        verbose_name='Активность'
     )
     is_staff = models.BooleanField('Статус менеджера', default=False)
     friends = models.ManyToManyField(
         to='self',
         blank=True,
-        null=True
+        verbose_name="Друзья"
     )
     blocked_users = models.ManyToManyField(
-        to="self",
+        to='self',
         blank=True,
-        null=True
+        verbose_name="Заблокированные пользователи"
     )
     last_seen = models.DateTimeField(
         auto_now=True,
@@ -126,7 +126,7 @@ class CustomUser(
 
     class Meta:  # noqa
         ordering = (
-            'date_joined',
+            'datetime_created',
         )
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'

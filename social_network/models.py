@@ -28,8 +28,9 @@ class Chat(AbstractDateTime):  # noqa
         verbose_name='Миниатюра'
     )
     members = models.ManyToManyField(
+        to=CustomUser,
         through="ChatMember",
-        through_fields=("user", "chat"),
+        through_fields=("chat", "user"),
         related_name="joined_chats",
         blank=True,
         verbose_name="Члены чата"
@@ -41,21 +42,19 @@ class Chat(AbstractDateTime):  # noqa
 
 
 class ChatMember(models.Model):  # noqa
-    user = models.ForeignKey(
-        to=CustomUser,
-        on_delete=models.RESTRICT,
-        related_name="chats",
-        verbose_name="Пользователь"
-    )
     chat = models.ForeignKey(
         to=Chat,
         on_delete=models.RESTRICT,
-        related_name="members",
         verbose_name="Чат"
+    )
+    user = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.RESTRICT,
+        verbose_name="Пользователь"
     )
     chat_name = models.CharField(
         max_length=150,
-        default=user.username,
+        default="Unkown",
         verbose_name="Никнейм в чате"
     )
 
@@ -175,29 +174,29 @@ class Group(AbstractDateTime):  # noqa
     )
     followers = models.ManyToManyField(
         to=CustomUser,
-        related_name="groups",
         blank=True,
+        related_name="followed_groups",
         verbose_name="Подписчики"
     )
     members_rights = models.ManyToManyField(
         to=CustomUser,
         through="GroupAdministration",
-        through_fields=("user", "group"),
-        related_name="group_rights",
+        through_fields=("group", "user"),
+        related_name="groups_rights",
         verbose_name="Позиция в группе"
     )
 
 
 class GroupAdministration(AbstractDateTime):  # noqa
-    user = models.ForeignKey(
-        to=CustomUser,
-        on_delete=models.RESTRICT,
-        verbose_name="Пользователь группы"
-    )
     group = models.ForeignKey(
         to=Group,
         on_delete=models.RESTRICT,
         verbose_name="Группа"
+    )
+    user = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.RESTRICT,
+        verbose_name="Пользователь группы"
     )
     position = models.ForeignKey(
         to=Position,
@@ -233,7 +232,7 @@ class Playlist(AbstractDateTime):  # noqa
         verbose_name="Название плэйлиста"
     )
     photo = models.ImageField(
-        uploaded_to="photos/playlists/%Y/%m/%d",
+        upload_to="photos/playlists/%Y/%m/%d",
         blank=True,
         verbose_name="Фото плэйлиста"
     )
