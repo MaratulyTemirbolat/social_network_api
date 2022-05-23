@@ -1,0 +1,12 @@
+asgiref==3.5.1
+backports.zoneinfo==0.2.1
+Django==4.0.4
+django-debug-toolbar==3.4.0
+flake8==4.0.1
+mccabe==0.6.1
+Pillow==9.1.1
+pycodestyle==2.8.0
+pydocstyle==6.1.1
+pyflakes==2.4.0
+snowballstemmer==2.2.0
+sqlparse==0.4.2
