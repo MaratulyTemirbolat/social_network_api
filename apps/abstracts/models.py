@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 
 
@@ -18,3 +20,13 @@ class AbstractDateTime(models.Model):  # noqa
 
     class Meta:  # noqa
         abstract = True
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        datetime_now: datetime = datetime.now()
+        self.datetime_deleted = datetime_now
+        self.save(
+            update_fields=['datetime_deleted']
+        )

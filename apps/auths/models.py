@@ -1,9 +1,11 @@
 from datetime import date
+# from autoslug import AutoSlugField
 
 from django.contrib.auth.models import (
     AbstractBaseUser,
     PermissionsMixin,
 )
+from django.utils.text import slugify
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ValidationError
@@ -38,7 +40,9 @@ class CustomUserManager(BaseUserManager):  # noqa
     def create_user(
         self,
         email: str,
-        password: str
+        password: str,
+        username: str,
+        birthday: date
     ) -> 'CustomUser':  # noqa
 
         if not email:
@@ -46,7 +50,9 @@ class CustomUserManager(BaseUserManager):  # noqa
 
         user: 'CustomUser' = self.model(
             email=self.normalize_email(email),
-            password=password
+            password=password,
+            username=username,
+            birthday=birthday
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -55,12 +61,16 @@ class CustomUserManager(BaseUserManager):  # noqa
     def create_superuser(
         self,
         email: str,
-        password: str
+        password: str,
+        username: str,
+        birthday: date
     ) -> 'CustomUser':  # noqa
 
         user: 'CustomUser' = self.model(
             email=self.normalize_email(email),
-            password=password
+            password=password,
+            username=username,
+            birthday=birthday
         )
         user.is_staff = True
         user.is_superuser = True
@@ -86,7 +96,10 @@ class CustomUser(
         default=True,
         verbose_name='Активность'
     )
-    is_staff = models.BooleanField('Статус менеджера', default=False)
+    is_staff = models.BooleanField(
+        default=False,
+        verbose_name='Статус менеджера'
+    )
     friends = models.ManyToManyField(
         to='self',
         blank=True,
@@ -111,9 +124,9 @@ class CustomUser(
         verbose_name="Никнейм"
     )
     slug = models.SlugField(
-        unique=True,
         max_length=255,
-        verbose_name="Url"
+        unique=True,
+        verbose_name="Url (by username)"
     )
     birthday = models.DateField(
         validators=[adult_validation],
@@ -130,3 +143,39 @@ class CustomUser(
         )
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        self.slug = slugify(self.username)
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:  # noqa
+        return f'Пользователь: {self.username}; Email: {self.email}'
+
+
+class Phone(AbstractDateTime):  # noqa
+    phone = models.CharField(
+        max_length=12,
+        verbose_name="Номер телефона"
+    )
+    owner = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.RESTRICT,
+        related_name="phones",
+        verbose_name="Владелец"
+    )
+
+    class Meta:  # noqa
+        verbose_name = "Телефон"
+        verbose_name_plural = "Телефоны"
+        ordering = (
+            'datetime_created',
+        )
+        constraints = [
+            models.UniqueConstraint(
+                fields=['phone', 'owner'],
+                name="unique_phone_owner"
+            ),
+        ]
+
+    def __str__(self) -> str:  # noqa
+        return f'Телефон {self.phone} принадлежит {self.owner}'
