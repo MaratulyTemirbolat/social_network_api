@@ -1,6 +1,18 @@
 from datetime import datetime
 
 from django.db import models
+from django.db.models import QuerySet
+
+class AbstractDateTimeQuerySet(QuerySet):  # noqa
+    def get_deleted(self) -> QuerySet:  # noqa
+        return self.filter(
+            datetime_deleted__isnull=False
+        )
+
+    def get_not_deleted(self) -> QuerySet:  # noqa
+        return self.filter(
+            datetime_deleted__isnull=True
+        )
 
 
 class AbstractDateTime(models.Model):  # noqa
@@ -17,6 +29,7 @@ class AbstractDateTime(models.Model):  # noqa
         null=True,
         blank=True
     )
+    objects = AbstractDateTimeQuerySet.as_manager()
 
     class Meta:  # noqa
         abstract = True

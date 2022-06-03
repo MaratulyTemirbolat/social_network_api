@@ -1,3 +1,5 @@
-from django.contrib import admin
+from typing import (
+    Sequence,
+)
 
-# Register your models here.
+from django.contrib import admin  # noqa

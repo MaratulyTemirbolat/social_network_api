@@ -8,28 +8,7 @@ from rest_framework.response import Response as DRF_Response
 from rest_framework.pagination import BasePagination
 from rest_framework.serializers import Serializer
 
-from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import QuerySet
-from django.http import HttpResponse
-
-from abstracts.mixins import HttpResponseMixin
-
-
-class ViewHandler(HttpResponseMixin):
-    """Handler for validating request and generating response."""
-
-    def get_validated_response(
-        self,
-        request: WSGIRequest
-    ) -> Optional[HttpResponse]:
-        """Get validated response."""
-        if request.user.is_authenticated:
-            return None
-
-        return self.get_http_response(
-            request,
-            'university/user_login.html'
-        )
 
 
 class DRFResponseHandler:

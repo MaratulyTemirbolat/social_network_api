@@ -5,8 +5,9 @@ from auths.models import CustomUser
 
 
 class Playlist(AbstractDateTime):  # noqa
+    PLAYLIST_MAX_NAME_LEN = 150
     name = models.CharField(
-        max_length=150,
+        max_length=PLAYLIST_MAX_NAME_LEN,
         verbose_name="Название плэйлиста"
     )
     photo = models.ImageField(
@@ -21,26 +22,42 @@ class Playlist(AbstractDateTime):  # noqa
         blank=True
     )
 
+    class Meta:  # noqa
+        verbose_name = "Плэйлист"
+        verbose_name_plural = "Плэйлисты"
+        ordering = (
+            "datetime_updated",
+        )
+
 
 class Performer(AbstractDateTime):  # noqa
+    PERFORMER_MAX_USERNAME_LEN = 100
+    PERFORMER_MAX_NAME_SURNAME_LEN = 100
     username = models.CharField(
-        max_length=100,
+        max_length=PERFORMER_MAX_USERNAME_LEN,
         unique=True,
         verbose_name="Никнейм"
     )
     slug = models.SlugField(
-        max_length=255,
+        max_length=PERFORMER_MAX_USERNAME_LEN,
         unique=True,
         verbose_name="Url"
     )
     name = models.CharField(
-        max_length=100,
+        max_length=PERFORMER_MAX_NAME_SURNAME_LEN,
         verbose_name="Имя"
     )
     surname = models.CharField(
-        max_length=100,
+        max_length=PERFORMER_MAX_NAME_SURNAME_LEN,
         verbose_name="Фамилия"
     )
+
+    class Meta:  # noqa
+        verbose_name = "Исполнитель"
+        verbose_name_plural = "Исполнители"
+        ordering = (
+            "datetime_updated",
+        )
 
 
 class Music(AbstractDateTime):  # noqa
@@ -66,3 +83,10 @@ class Music(AbstractDateTime):  # noqa
         verbose_name="Пользователи",
         blank=True
     )
+
+    class Meta:  # noqa
+        verbose_name = "Музыка"
+        verbose_name_plural = "Музыки"
+        ordering = (
+            "datetime_updated",
+        )

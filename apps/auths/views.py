@@ -33,7 +33,7 @@ class CustomUserViewSet(DRFResponseHandler, ViewSet):
         permissions.IsAdminUser,
     )
     queryset: QuerySet[CustomUser] = \
-        CustomUser.objects.get_non_deleted()
+        CustomUser.objects.get_not_deleted()
     serializer_class: CustomUserSerializer = CustomUserSerializer
 
     def get_queryset(self) -> QuerySet[CustomUser]:  # noqa
@@ -143,3 +143,25 @@ class CustomUserViewSet(DRFResponseHandler, ViewSet):
         return DRF_Response(
             {'data': f'Объект {custom_user.id} удален'}
         )
+
+
+class CustomUserViewSetTrial(ViewSet):  # noqa
+    permission_classes: tuple = (
+        permissions.AllowAny,
+    )
+    queryset: QuerySet[CustomUser] = \
+        CustomUser.objects.get_not_deleted()
+    serializer_class: CustomUserSerializer = CustomUserSerializer
+
+    def list(self, request: DRF_Request) -> DRF_Response:
+        """Return list of all users."""
+        serializer: CustomUserSerializer = self.serializer_class(
+            self.queryset,
+            many=True
+        )
+        response: DRF_Response = DRF_Response(
+            {
+                "users": serializer.data
+            }
+        )
+        return response

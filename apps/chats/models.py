@@ -1,12 +1,26 @@
 from django.db import models
+from django.db.models import QuerySet
 
 from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
 
 
+# class ChatQuerySet(QuerySet):  # noqa
+#     def get_deleted(self) -> QuerySet:  # noqa
+#         return self.filter(
+#             datetime_deleted__isnull=False
+#         )
+
+#     def get_not_deleted(self) -> QuerySet:  # noqa
+#         return self.filter(
+#             datetime_deleted__isnull=True
+#         )
+
+
 class Chat(AbstractDateTime):  # noqa
     CHAT_MAX_NAME_LENGTH = 150
     URL_MAX_LENGTH = 50
+
     name = models.CharField(
         max_length=CHAT_MAX_NAME_LENGTH,
         verbose_name="Название чата"
@@ -34,6 +48,7 @@ class Chat(AbstractDateTime):  # noqa
         blank=True,
         verbose_name="Члены чата"
     )
+
     class Meta:  # noqa
         verbose_name = "Чат"
         verbose_name_plural = "Чаты"
@@ -41,8 +56,12 @@ class Chat(AbstractDateTime):  # noqa
             "-datetime_updated",
         )
 
+    def __str__(self) -> str:  # noqa
+        return f"Чат \"{self.name}\""
+
 
 class ChatMember(models.Model):  # noqa
+    CHAT_USER_NAME_MAX_LEN = 150
     chat = models.ForeignKey(
         to=Chat,
         on_delete=models.RESTRICT,
@@ -54,7 +73,7 @@ class ChatMember(models.Model):  # noqa
         verbose_name="Пользователь"
     )
     chat_name = models.CharField(
-        max_length=150,
+        max_length=CHAT_USER_NAME_MAX_LEN,
         default=None,
         null=True,
         blank=True,

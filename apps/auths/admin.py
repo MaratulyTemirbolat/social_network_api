@@ -1,38 +1,65 @@
-from typing import Optional
+from typing import (
+    Optional,
+    Tuple,
+    Dict,
+    Sequence,
+    Any,
+)
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.handlers.wsgi import WSGIRequest
 
-from auths.forms import (
-    CustomUserCreationForm,
-    CustomUserChangeForm,
+# from auths.forms import (
+#     CustomUserCreationForm,
+#     CustomUserChangeForm,
+# )
+from auths.models import (
+    CustomUser,
+    Friends,
 )
-from auths.models import CustomUser
+from auths.filters import CommonStateFilter
 
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):  # noqa
-    add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
-    model = CustomUser
+    # add_form = CustomUserCreationForm
+    # form = CustomUserChangeForm
+    # model = CustomUser
 
-    fieldsets = (
-        ('Information', {
+    fieldsets: Tuple = (
+        ('Личная инормация', {
             'fields': (
                 'email',
+                ('username', 'slug'),
+                ('first_name', 'last_name'),
+                'birthday',
                 'password',
-                'username',
-                'slug',
             )
         }),
-        ('Permissions', {
+        ('Разрешения (Доступы)', {
             'fields': (
                 'is_superuser',
                 'is_staff',
                 'is_active',
+                'is_online',
+                'user_permissions',
             )
         }),
+        # ('Взаимодействие с пользователями', {
+        #     'fields': (
+        #         'friendss',
+        #     )
+        # }),
+        ('Данные времени', {
+            'fields': (
+                'last_login',
+                'last_seen',
+                'datetime_deleted',
+                'datetime_created',
+                'datetime_updated',
+            )
+        })
     )
     # NOTE: Used to define the fields that
     #       will be displayed on the create-user page
@@ -53,50 +80,46 @@ class CustomUserAdmin(UserAdmin):  # noqa
             ),
         }),
     )
-    search_fields = (
+    search_fields: Tuple[str] = (
         'email',
         'slug',
-    )
-    readonly_fields = (
-        'datetime_deleted',
-        'datetime_created',
-        'datetime_updated',
-        'is_superuser',
-        'is_staff',
-        'is_active',
-    )
-    list_display = (
-        'email',
-        'password',
         'username',
+    )
+    readonly_fields: Tuple[str] = (
+        'is_superuser',
         'is_staff',
-        'slug',
         'is_active',
+        'last_seen',
+        'is_online',
+        'last_login',
         'datetime_deleted',
         'datetime_created',
         'datetime_updated',
     )
-    list_filter = (
+    list_display: Tuple[str] = (
         'email',
+        'username',
+        'slug',
+        'is_staff',
+        'is_active',
+        'last_login',
+    )
+    list_filter: Tuple[str, Any] = (
         'is_superuser',
         'is_staff',
         'is_active',
+        CommonStateFilter,
     )
-    ordering = (
+    ordering: Tuple[str] = (
         'email',
     )
-    # fields = (
-    #     ('id', 'slug'),
-    #     'username', 'email',
-    #     'password', 'last_login',
-    #     'is_superuser',
-    #     'datetime_deleted',
-    #     'datetime_created',
-    #     'datetime_updated',
-    # )
-    prepopulated_fields = {
+    save_on_top: bool = True
+    prepopulated_fields: Dict[str, Sequence[str]] = {
         "slug": ("username",),
     }
+    filter_horizontal: Sequence[str] = (
+        "user_permissions",
+    )
 
     def get_readonly_fields(
         self,
@@ -109,3 +132,8 @@ class CustomUserAdmin(UserAdmin):  # noqa
         return self.readonly_fields + (
             'email',
         )
+
+
+@admin.register(Friends)
+class FriendsAdmin(admin.ModelAdmin):  # noqa
+    pass

@@ -24,18 +24,18 @@ class CustomUserChangeForm(UserChangeForm):  # noqa
         )
 
 
-class CustomUserForm(forms.ModelForm):  # noqa
-    email = forms.EmailField(
-        label='Почта'
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput,
-        label='Пароль'
-    )
+# class CustomUserForm(forms.ModelForm):  # noqa
+#     email = forms.EmailField(
+#         label='Почта'
+#     )
+#     password = forms.CharField(
+#         widget=forms.PasswordInput,
+#         label='Пароль'
+#     )
 
-    class Meta:  # noqa
-        model = CustomUser
-        fields = (
-            'email',
-            'password',
-        )
+#     class Meta:  # noqa
+#         model = CustomUser
+#         fields = (
+#             'email',
+#             'password',
+#         )
