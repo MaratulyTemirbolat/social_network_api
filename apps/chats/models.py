@@ -5,18 +5,6 @@ from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
 
 
-# class ChatQuerySet(QuerySet):  # noqa
-#     def get_deleted(self) -> QuerySet:  # noqa
-#         return self.filter(
-#             datetime_deleted__isnull=False
-#         )
-
-#     def get_not_deleted(self) -> QuerySet:  # noqa
-#         return self.filter(
-#             datetime_deleted__isnull=True
-#         )
-
-
 class Chat(AbstractDateTime):  # noqa
     CHAT_MAX_NAME_LENGTH = 150
     URL_MAX_LENGTH = 50

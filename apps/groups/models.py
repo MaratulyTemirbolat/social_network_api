@@ -1,3 +1,5 @@
+from translate import Translator
+
 from django.db import models
 from django.utils.text import slugify
 
@@ -57,6 +59,7 @@ class Privilege(AbstractDateTime):  # noqa
     name_ru = models.CharField(
         max_length=MAX_PRIVILEGE_NAME,
         unique=True,
+        blank=True,
         db_index=True,
         verbose_name="Наименование на русском"
     )
@@ -77,9 +80,13 @@ class Privilege(AbstractDateTime):  # noqa
         )
 
     def __str__(self) -> str:  # noqa
-        return f'Привилегия {self.name}'
+        return f'Привилегия {self.name_ru}'
 
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        # translation to russian
+        translator = Translator(to_lang="ru")
+        self.name_ru = translator.translate(self.name_en)
+        # slug part
         self.slug = slugify(self.name_en)
         super().save(*args, **kwargs)
 
