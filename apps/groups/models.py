@@ -14,7 +14,7 @@ class Group(AbstractDateTime):  # noqa
         max_length=100,
         unique=True,
         verbose_name="URL (на группу)",
-        help_text="URL для поиска группы"
+        help_text="URL для поиска группы (будет в нижнем регистре)"
     )
     followers = models.ManyToManyField(
         to=CustomUser,
@@ -40,6 +40,9 @@ class Group(AbstractDateTime):  # noqa
     def __str__(self) -> str:  # noqa
         return f'Группа {self.name}'
 
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        self.slug = self.slug.lower()
+        return super().save(*args, **kwargs)
 
 class Privilege(AbstractDateTime):  # noqa
     MAX_PRIVILEGE_NAME = 50

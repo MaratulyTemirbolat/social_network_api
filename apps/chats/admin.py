@@ -57,7 +57,7 @@ class ChatAdmin(admin.ModelAdmin):  # noqa
     )
     save_on_top: bool = True
 
-    def get_photo(self, obj: Optional[Chat]) -> str:  # noqa
+    def get_photo(self, obj: Optional[Chat] = None) -> str:  # noqa
         if obj.photo:
             return mark_safe(f'<img src="{obj.photo.url}" height="100">')
     get_photo.short_description = "Фото чата"

@@ -112,7 +112,7 @@ class CustomUserAdmin(UserAdmin):  # noqa
         CommonStateFilter,
     )
     ordering: Tuple[str] = (
-        'email',
+        '-datetime_updated',
     )
     save_on_top: bool = True
     prepopulated_fields: Dict[str, Sequence[str]] = {
