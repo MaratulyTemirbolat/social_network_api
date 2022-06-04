@@ -98,11 +98,13 @@ class CustomUserAdmin(UserAdmin):  # noqa
         'datetime_updated',
     )
     list_display: Tuple[str] = (
+        'id',
         'email',
         'username',
         'slug',
         'is_staff',
         'is_active',
+        'is_superuser',
         'last_login',
     )
     list_filter: Tuple[str, Any] = (
@@ -157,4 +159,7 @@ class PhoneAdmin(admin.ModelAdmin):  # noqa
     list_display: Tuple[str] = (
         "phone",
         "owner",
+    )
+    search_fields: Tuple[str] = (
+        "phone",
     )

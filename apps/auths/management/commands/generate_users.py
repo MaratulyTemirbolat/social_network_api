@@ -1,253 +1,202 @@
 import random
 import names
-from datetime import datetime
+from datetime import (
+    date,
+    datetime
+)
 from typing import (
+    List,
+    Sequence,
     Tuple,
     Any,
     Dict,
 )
+import radar
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import (
-    User,
-)
+from django.utils.text import slugify
 
-from my_new_app.models import (
-    Group,
-    Account,
-    Student,
-    Professor,
-    StudentQuerySet,
+from auths.models import (
+    CustomUser,
+    Phone,
+    Friends,
 )
 
 
 class Command(BaseCommand):
     """Custom command for filling up database.
 
-    Generate Test data only for database. 
+    Generate Test data only for database.
     For each App you create another own Command
     """
+
     help = 'Custom command for filling up database.'
 
-    _email_patterns: tuple = (
+    __email_patterns: tuple = (
         'gmail.com', 'outlook.com', 'yahoo.com',
         'inbox.ru', 'inbox.ua', 'inbox.kz',
         'yandex.ru', 'yandex.ua', 'yandex.kz',
         'mail.ru', 'mail.ua', 'mail.kz',
     )
+
     def __init__(self, *args: Tuple[Any], **kwargs: Dict[Any, Any]) -> None:  # noqa
         super().__init__(args, kwargs)
 
-    def __generate_name(self,
-                        name: str,
-                        inc: int) -> str:
-        return f'{name} {inc}'
-
-    def _generate_users(self, user_number: int,
-                        initial_time: datetime) -> None:
-        """Generate user objects"""
-
-        REQUIRED_SUPERUSER_QUANTITY = 1
-
-        def get_username(first_name: str, last_name: str) -> str:
-            username: str = first_name.lower() + '_' + last_name.lower()
-            return username
+    def __generate_users(
+        self,
+        gen_users: int = 0,
+        is_super_user: bool = False
+    ) -> None:
+        def get_username(
+            first_name: str,
+            last_name: str,
+            first_name_len: int,
+            last_name_len: int
+        ) -> str:
+            short_first_name: str = first_name[:first_name_len]
+            short_last_name: str = last_name[:last_name_len]
+            return f'{short_first_name}_{short_last_name}'
 
         def get_email(first_name: str, last_name: str) -> str:
-            email_identification: str = random.choice(_email_patterns)
-            email: str = first_name.lower() + '.' + last_name.lower() + \
-                '@' + email_identification
-            return email
+            email_end: str = random.choice(self.__email_patterns)
+            return f'{first_name}_{last_name}@{email_end}'
 
-        def get_password() -> str:
-            _passwd_pattern: str = 'abcde12345'
-            _passwd_length: int = 8
-            _user_password: str = ''.join(
-                random.sample(_passwd_pattern, _passwd_length)
-                )
-            return make_password(_user_password)
-        
-        def get_user_instance_dict() -> dict:
+        def generate_password() -> str:
+            PASSWORD_PATTERN = "temirbolatm2001"
+            return make_password(PASSWORD_PATTERN)
+
+        def get_random_date() -> date:
+            start_date: date = date(year=1950, month=1, day=1)
+            end_date: date = date(year=2001, month=1, day=31)
+            return radar.random_date(start=start_date, stop=end_date)
+
+        model_users: List[CustomUser] = []
+
+        _: int
+        for _ in range(gen_users):
+            first_name_len: int = random.randint(1, 6)
+            last_name_len: int = random.randint(1, 6)
             first_name: str = names.get_first_name()
             last_name: str = names.get_last_name()
-            username: str = get_username(first_name, last_name)
-            email: str = get_email(first_name, last_name)
-            password: str = get_password()
-            
+            username: str = get_username(
+                first_name=first_name.lower(),
+                last_name=last_name.lower(),
+                first_name_len=first_name_len,
+                last_name_len=last_name_len
+            )
+            email: str = get_email(
+                first_name=first_name.lower(),
+                last_name=last_name.lower()
+            )
+            birthday: date = get_random_date()
+            password: str = generate_password()
             cur_user: dict = {
+                'email': email,
                 'first_name': first_name,
                 'last_name': last_name,
-                'username': username,
-                'email': email,
                 'password': password,
-                'is_staff': True,
+                'username': username,
+                'birthday': birthday,
+                'slug': slugify(username)
             }
-
-            return cur_user
-
-        super_user_number: int = User.objects.filter(
-            is_superuser=True
-            ).count()
-
-        if (super_user_number < REQUIRED_SUPERUSER_QUANTITY):
-            super_user: dict = get_user_instance_dict()
-            while(User.objects.filter(
-                username=super_user['username']
-            ).exists()):
-                super_user = get_user_instance_dict()
-
-            super_user['is_superuser'] = True
-            User.objects.create(**super_user)
-            user_number -= 1
-            print(
-                'Generating Data for SuperUser: {} seconds'.format(
-                 (datetime.now()-initial_time).total_seconds()
-                )
-            )
-
-        cur_user: dict = get_user_instance_dict()
-
-        cur_index: int
-        for cur_index in range(user_number):
-            while(User.objects.filter(
-                  username=cur_user['username']
-                  ).exists()):
-                cur_user = get_user_instance_dict()
-
-            User.objects.create(**cur_user)
-            print(
-                 'Generating Data for General User: {} seconds'.format(
-                  (datetime.now()-initial_time).total_seconds()
-                 )
-            )
-
-    def _generate_users_accounts_students(self) -> None:
-        """Generate user account and student objects"""
-
-        USER_ACCOUNT_STUDENT_NUMBER = 100
-        DEFAULT_PASSWORD = '12345'
-
-        def generate_username(increment: int) -> str:
-            return f'User {increment}'
-
-        def generate_student_age() -> int:
-            random_age: int = random.randint(5, Student.MAX_REGISTER_AGE)
-            return random_age
-
-        def get_random_group() -> Group:
-            random_group: Group = random.choice(Group.objects.all())
-            return random_group
-
-        def get_random_gpa() -> float:
-            GPA_MULTIPLIER = 4.0
-            HUNDRETH_POSITION = 2
-            random_gpa: float = GPA_MULTIPLIER * random.random()
-            random_gpa = round(random_gpa, HUNDRETH_POSITION)
-            return random_gpa
-
-        increment: int 
-        for increment in range(USER_ACCOUNT_STUDENT_NUMBER):
-            username: str = generate_username(increment)
-            is_staff: bool = True
-
-            created_user: User = User.objects.create(
-                username=username,
-                is_staff=is_staff,
-                password=DEFAULT_PASSWORD
-            )
-
-            account_full_name: str = self.__generate_name(username, increment)
-            account_description: str = f'{username}\'s description'
-            created_account: Account = Account.objects.create(
-                user=created_user,
-                full_name=account_full_name,
-                description=account_description
-            )
-            student_age: int = generate_student_age()
-            student_group: Group = get_random_group()
-            student_gpa: float = get_random_gpa()
-            Student.objects.create(
-                account=created_account,
-                age=student_age,
-                group=student_group,
-                gpa=student_gpa
-            )
-
-    def _generate_groups(self) -> None:
-        """Generate Group objs."""
-
-        def generate_name(inc: int) -> str:
-            return f'Группа {inc}'
-
-        inc: int
-        for inc in range(20):
-            name: str = generate_name(inc)
-            Group.objects.create(
-                name=name
-            )
-
-    def _generate_professors(self) -> None:
-        """Generate Professor objs."""
-        PROFESSOR_NUMBER = 10
-        MIN_STUDENT_NUMBER = 1
-        MAX_STUDENT_NUMBER = 5
-
-        def get_random_subject_topic() -> str:
-            all_subjects: tuple = Professor.TOPIC_CHOICES
-            random_subject: str = random.choice(all_subjects)[0]
-            return random_subject
-
-        inc: int
-        for inc in range(PROFESSOR_NUMBER):
-            full_name: str = self.__generate_name('Профессор', inc)
-            topic: str = get_random_subject_topic()
-            created_professor: Professor = Professor.objects.create(
-                full_name=full_name,
-                topic=topic
-            )
-
-            student_number: int = random.randint(
-                MIN_STUDENT_NUMBER,
-                MAX_STUDENT_NUMBER
-                )
-            all_students: StudentQuerySet = Student.objects.all()
-            unregistered_students: list = random.choices(all_students,
-                                                         k=student_number)
-
-            i: int
-            for i in range(student_number):
-                unregistered_students[i].professor_set.add(
-                    created_professor
+            if is_super_user:
+                model_users.append(
+                    CustomUser(
+                        is_staff=True,
+                        is_superuser=True,
+                        **cur_user
                     )
+                )
+            else:
+                model_users.append(
+                    CustomUser(
+                        **cur_user
+                    )
+                )
+            # if is_super_user:
+            #     CustomUser.objects.create_superuser(**cur_user)
+            # else:
+            #     CustomUser.objects.get_or_create(**cur_user)
+            # print(f'Пользователь {username} успешно создан')
+        CustomUser.objects.bulk_create(model_users)
+        print("Пользователи успешно созданы")
+
+    def __generate_phones(self) -> None:
+        def get_phone() -> str:
+            first = str(random.randint(100, 999))
+            second = str(random.randint(1, 888)).zfill(3)
+            last = (str(random.randint(1, 9998)).zfill(4))
+            template: List[str] = [
+                '1111', '2222',
+                '3333', '4444',
+                '5555', '6666',
+                '7777', '8888'
+            ]
+            while last in template:
+                last = (str(random.randint(1, 9998)).zfill(4))
+            return '+7{}{}{}'.format(first, second, last)
+
+        user_number: int = CustomUser.objects.count()
+        all_users: Tuple[CustomUser] = tuple(CustomUser.objects.all())
+        all_models: List[Phone] = []
+
+        _: int
+        for _ in range(user_number):
+            phone_number: str = get_phone()
+            owner: CustomUser = random.choice(all_users)
+            all_models.append(
+                Phone(
+                    phone=phone_number,
+                    owner=owner
+                )
+            )
+        Phone.objects.bulk_create(all_models)
+
+    def __generate_friends(self) -> None:
+        total_users: int = CustomUser.objects.count()
+        all_users_id: Sequence[int] = CustomUser.objects.all().values_list(
+            "id",
+            flat=True
+        )
+
+        friends_model: List[Friends] = []
+
+        i: int
+        for i in range(total_users):
+            to_user_limit: int = random.randint(2, 10)
+            friends: List[int] = all_users_id.exclude(
+                id=all_users_id[i]
+            )[:to_user_limit]
+
+            k: int
+            for k in range(to_user_limit):
+                friends_model.append(
+                    Friends(
+                        from_user_id=all_users_id[i],
+                        to_user_id=friends[k],
+                        is_blocked=False
+                    )
+                )
+        Friends.objects.bulk_create(friends_model)
 
     def handle(self, *args: tuple, **kwargs: dict) -> None:
         # Автоматически вызывается, когда вызывается generate_data файл
-        """Handles data filling."""
-
-        TOTAL_USER_COUNT = 500
-        ZERO_COUNT = 0
+        """Handle data filling."""
+        GEN_USER_COUNT = 150
+        SUPERUSER_COUNT = 10
 
         start: datetime = datetime.now()
         # Получаем время в начале срабатывания кода, чтобы высчитать разницу
 
-        current_user_number: int = User.objects.count()
-        user_difference: int = TOTAL_USER_COUNT - current_user_number
-        if (user_difference > ZERO_COUNT):
-            self._generate_users(user_difference, start)
-        else:
-            print(
-                'No need to create Users. Max amount is',
-                TOTAL_USER_COUNT
-            )
-
-        # self._generate_groups()  # Генерируем данные
-        # self._generate_users_accounts_students()
-        # self._generate_professors()
+        self.__generate_users(gen_users=GEN_USER_COUNT)
+        self.__generate_users(gen_users=SUPERUSER_COUNT, is_super_user=True)
+        self.__generate_phones()
+        self.__generate_friends()
 
         # Выдаем время генерации данных
         print(
-            'Generating Data: {} seconds'.format(
+            'Генерация данных составила: {} секунд'.format(
                 (datetime.now()-start).total_seconds()
             )
         )

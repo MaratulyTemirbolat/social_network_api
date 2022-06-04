@@ -48,17 +48,23 @@ class Group(AbstractDateTime):  # noqa
 
 class Privilege(AbstractDateTime):  # noqa
     MAX_PRIVILEGE_NAME = 50
-    name = models.CharField(
+    name_en = models.CharField(
         max_length=MAX_PRIVILEGE_NAME,
         unique=True,
         db_index=True,
-        verbose_name="Наименование"
+        verbose_name="Наименование на английском"
+    )
+    name_ru = models.CharField(
+        max_length=MAX_PRIVILEGE_NAME,
+        unique=True,
+        db_index=True,
+        verbose_name="Наименование на русском"
     )
     slug = models.SlugField(
         max_length=MAX_PRIVILEGE_NAME,
         unique=True,
         db_index=True,
-        editable=False,
+        blank=True,
         verbose_name="URL (shared link)",
         help_text="URL для поиска привилегий по названию"
     )
@@ -74,7 +80,7 @@ class Privilege(AbstractDateTime):  # noqa
         return f'Привилегия {self.name}'
 
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
-        self.slug = slugify(self.name)
+        self.slug = slugify(self.name_en)
         super().save(*args, **kwargs)
 
 

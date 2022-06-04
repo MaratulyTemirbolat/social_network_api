@@ -84,16 +84,17 @@ class PrivilegeModel(admin.ModelAdmin):  # noqa
         "datetime_deleted",
         "datetime_updated",
         "datetime_created",
+        "slug",
     )
-    list_display: Tuple[str] = (
-        "name", "slug", "get_is_deleted",
-    )
+    # list_display: Tuple[str] = (
+    #     "name_en", "slug", "get_is_deleted",
+    # )
     list_filter: Tuple[Any] = (
         CommonStateFilter,
     )
-    list_display_links: Tuple[str] = (
-        "name", "slug",
-    )
+    # list_display_links: Tuple[str] = (
+    #     "name_en", "name_ru", "slug",
+    # )
     save_as_continue: bool = True
 
     def get_readonly_fields(
@@ -102,7 +103,7 @@ class PrivilegeModel(admin.ModelAdmin):  # noqa
         obj: Optional[Privilege] = None
     ) -> Tuple[str]:  # noqa
         if obj:
-            return self.readonly_fields + ("name", "slug",)
+            return self.readonly_fields + ("name_en", "slug",)
         return self.readonly_fields
 
     def get_is_deleted(self, obj: Optional[Group]=None) -> str:  # noqa

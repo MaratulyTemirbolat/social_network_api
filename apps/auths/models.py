@@ -48,7 +48,8 @@ class CustomUserManager(BaseUserManager):  # noqa
         last_name: str,
         password: str,
         username: str,
-        birthday: date
+        birthday: date,
+        **kwargs: dict
     ) -> 'CustomUser':  # noqa
 
         if not email:
@@ -60,7 +61,8 @@ class CustomUserManager(BaseUserManager):  # noqa
             last_name=last_name,
             password=password,
             username=username,
-            birthday=birthday
+            birthday=birthday,
+            **kwargs
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -73,7 +75,8 @@ class CustomUserManager(BaseUserManager):  # noqa
         last_name: str,
         password: str,
         username: str,
-        birthday: date
+        birthday: date,
+        **kwargs: dict
     ) -> 'CustomUser':  # noqa
 
         user: 'CustomUser' = self.model(
@@ -82,7 +85,8 @@ class CustomUserManager(BaseUserManager):  # noqa
             last_name=last_name,
             password=password,
             username=username,
-            birthday=birthday
+            birthday=birthday,
+            **kwargs
         )
         user.is_staff = True
         user.is_superuser = True
@@ -139,7 +143,7 @@ class CustomUser(
         verbose_name="Последний вход"
     )
     is_online = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name="Онлайн"
     )
     username = models.CharField(
@@ -223,6 +227,7 @@ class Friends(models.Model):  # noqa
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
         self.full_clean()
         super().save(*args, **kwargs)
+
 
 class Phone(AbstractDateTime):  # noqa
     phone = models.CharField(
