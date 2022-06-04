@@ -10,6 +10,9 @@ from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
+from django.core.validators import (
+    RegexValidator,
+)
 
 from abstracts.models import AbstractDateTime
 from auths.validators import the_same_users_validator
@@ -224,7 +227,16 @@ class Friends(models.Model):  # noqa
 class Phone(AbstractDateTime):  # noqa
     phone = models.CharField(
         max_length=12,
-        verbose_name="Номер телефона"
+        verbose_name="Номер телефона",
+        validators=[
+            RegexValidator(
+                regex="^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7}$",
+                message="Формат вашего телефона не совпадает",
+                code="phone_format"
+            )
+        ],
+        unique=True,
+        db_index=True,
     )
     owner = models.ForeignKey(
         to=CustomUser,
