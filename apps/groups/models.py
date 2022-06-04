@@ -13,6 +13,7 @@ class Group(AbstractDateTime):  # noqa
     slug = models.SlugField(
         max_length=100,
         unique=True,
+        db_index=True,
         verbose_name="URL (на группу)",
         help_text="URL для поиска группы (будет в нижнем регистре)"
     )
@@ -38,29 +39,33 @@ class Group(AbstractDateTime):  # noqa
         )
 
     def __str__(self) -> str:  # noqa
-        return f'Группа {self.name}'
+        return f'Группа "{self.name}"'
 
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
         self.slug = self.slug.lower()
         return super().save(*args, **kwargs)
 
+
 class Privilege(AbstractDateTime):  # noqa
     MAX_PRIVILEGE_NAME = 50
     name = models.CharField(
-        unique=True,
         max_length=MAX_PRIVILEGE_NAME,
+        unique=True,
+        db_index=True,
         verbose_name="Наименование"
     )
     slug = models.SlugField(
-        unique=True,
         max_length=MAX_PRIVILEGE_NAME,
+        unique=True,
+        db_index=True,
+        editable=False,
         verbose_name="URL (shared link)",
         help_text="URL для поиска привилегий по названию"
     )
 
     class Meta:  # noqa
-        verbose_name = "Привилегия (Для групп)"
-        verbose_name_plural = "Привилегии (Для групп)"
+        verbose_name = "Привилегия (В группе)"
+        verbose_name_plural = "Привилегии (В группах)"
         ordering = (
             "-datetime_updated",
         )
@@ -78,11 +83,13 @@ class Role(AbstractDateTime):  # noqa
     name = models.CharField(
         verbose_name="Наименование",
         unique=True,
+        db_index=True,
         max_length=MAX_POSITION_NAME
     )
     slug = models.SlugField(
         max_length=MAX_POSITION_NAME,
         unique=True,
+        db_index=True,
         verbose_name="Url",
         help_text="URL для поиска роли по наименованию"
     )
