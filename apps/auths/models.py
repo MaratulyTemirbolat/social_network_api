@@ -213,8 +213,12 @@ class Friends(models.Model):  # noqa
     def __str__(self) -> str:  # noqa
         return f'Пользователь {self.from_user} подписался на {self.to_user}'
 
+    def clean(self) -> None:  # noqa
+        the_same_users_validator(self.from_user, self.to_user)
+        return super().clean()
+
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
-        the_same_users_validator(self.to_user, self.is_blocked)
+        self.full_clean()
         super().save(*args, **kwargs)
 
 class Phone(AbstractDateTime):  # noqa

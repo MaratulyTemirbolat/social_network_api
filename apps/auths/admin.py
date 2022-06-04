@@ -17,6 +17,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from auths.models import (
     CustomUser,
     Friends,
+    Phone,
 )
 from auths.filters import CommonStateFilter
 
@@ -136,4 +137,24 @@ class CustomUserAdmin(UserAdmin):  # noqa
 
 @admin.register(Friends)
 class FriendsAdmin(admin.ModelAdmin):  # noqa
-    pass
+    list_display: Tuple[str] = (
+        "from_user",
+        "to_user",
+        "is_blocked",
+    )
+    list_filter: Tuple[str] = (
+        "is_blocked",
+    )
+
+
+@admin.register(Phone)
+class PhoneAdmin(admin.ModelAdmin):  # noqa
+    readonly_fields: Sequence[str] = (
+        "datetime_deleted",
+        "datetime_updated",
+        "datetime_created",
+    )
+    list_display: Tuple[str] = (
+        "phone",
+        "owner",
+    )
