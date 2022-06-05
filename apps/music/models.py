@@ -102,3 +102,6 @@ class Music(AbstractDateTime):  # noqa
         ordering = (
             "datetime_updated",
         )
+
+    def __str__(self) -> str:  # noqa
+        return f"Музыка {self.music}"
