@@ -155,3 +155,6 @@ class GroupAdministration(AbstractDateTime):  # noqa
                 name="unique_group_user_role"
             ),
         ]
+
+    def __str__(self) -> str:  # noqa
+        return f"{self.user} {self.group} имеет {self.role}"

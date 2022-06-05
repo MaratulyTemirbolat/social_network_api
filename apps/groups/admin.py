@@ -13,6 +13,7 @@ from groups.models import (
     Group,
     Privilege,
     Role,
+    GroupAdministration,
 )
 from abstracts.filters import (
     CommonStateFilter,
@@ -61,6 +62,9 @@ class GroupModel(admin.ModelAdmin):  # noqa
         '-datetime_updated',
     )
     save_on_top: bool = True
+    search_fields: Tuple[str] = (
+        "name", "slug",
+    )
 
     def get_readonly_fields(
         self,
@@ -153,3 +157,46 @@ class RoleModel(admin.ModelAdmin):  # noqa
         return "Роль не удалена"
     get_is_deleted.short_description = "Существование роли"
     get_is_deleted.empty_value_display = "Роль не удалена"
+
+
+@admin.register(GroupAdministration)
+class GroupAdministrationModel(admin.ModelAdmin):  # noqa
+    readonly_fields: Tuple[str] = (
+        "datetime_deleted",
+        "datetime_created",
+        "datetime_updated",
+    )
+    list_display: Tuple[str] = (
+        "id", "group",
+        "user", "role",
+    )
+    list_filter: Tuple[str] = (
+        "role",
+    )
+    list_display_links: Tuple[str] = (
+        "id", "group",
+    )
+    fieldsets: Tuple = (
+        ('Информация о группе', {
+            'fields': (
+                'group',
+            )
+        }),
+        ('Информация о пользователе', {
+            'fields': (
+                'user',
+            )
+        }),
+        ('Роль в группе', {
+            'fields': (
+                'role',
+            )
+        }),
+        ('История', {
+            'fields': (
+                'datetime_deleted',
+                'datetime_created',
+                'datetime_updated',
+            )
+        })
+    )
