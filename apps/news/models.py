@@ -16,6 +16,7 @@ class Tag(AbstractDateTime):  # noqa
     slug = models.SlugField(
         max_length=TAG_MAX_NAME_LEN,
         unique=True,
+        blank=True,
         verbose_name="Url",
         help_text="URL для поиска тэга по его наименованию"
     )
@@ -28,7 +29,7 @@ class Tag(AbstractDateTime):  # noqa
         )
 
     def __str__(self) -> str:  # noqa
-        return f"Тэг {self.name}"
+        return f"Тэг \"{self.name}\""
 
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
         self.slug = slugify(self.name)
