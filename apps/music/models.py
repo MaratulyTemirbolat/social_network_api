@@ -29,6 +29,9 @@ class Playlist(AbstractDateTime):  # noqa
             "datetime_updated",
         )
 
+    def __str__(self) -> str:  # noqa
+        return f"Плэйлист \"{self.name}\""
+
 
 class Performer(AbstractDateTime):  # noqa
     PERFORMER_MAX_USERNAME_LEN = 100
