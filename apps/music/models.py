@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
@@ -44,6 +45,7 @@ class Performer(AbstractDateTime):  # noqa
     slug = models.SlugField(
         max_length=PERFORMER_MAX_USERNAME_LEN,
         unique=True,
+        help_text="URL для поиска на основе никнейма исполнителя",
         verbose_name="Url"
     )
     name = models.CharField(
@@ -61,6 +63,13 @@ class Performer(AbstractDateTime):  # noqa
         ordering = (
             "datetime_updated",
         )
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        self.slug = slugify(self.username)
+        return super().save(*args, **kwargs)
+
+    def __str__(self) -> str:  # noqa
+        return f"Исполнитель \"{self.username}\""
 
 
 class Music(AbstractDateTime):  # noqa

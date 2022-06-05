@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 
 from music.models import (
     Playlist,
+    Performer,
 )
 from abstracts.filters import CommonStateFilter
 
@@ -74,3 +75,69 @@ class PlaylistModel(admin.ModelAdmin):  # noqa
             )
     get_is_deleted.short_description = "Существование плэйлиста"
     get_is_deleted.empty_value_display = "Плэйлист не удалён"
+
+
+@admin.register(Performer)
+class PerformerModel(admin.ModelAdmin):  # noqa
+    readonly_fields: Tuple[str] = (
+        "datetime_created",
+        "datetime_deleted",
+        "datetime_updated",
+        "slug",
+    )
+    fieldsets: Tuple = (
+        ('Информация об исполнителе (в сети)', {
+            'fields': (
+                ('username', 'slug',),
+            )
+        }),
+        ('Личная информация об исполнителе', {
+            'fields': (
+                ('name', 'surname',),
+            )
+        }),
+        ('История', {
+            'fields': (
+                'datetime_deleted',
+                'datetime_created',
+                'datetime_updated',
+            )
+        })
+    )
+    list_display: Tuple[str] = (
+        "username",
+        "slug",
+        "name",
+        "surname",
+        "get_is_deleted",
+    )
+    search_fields: Tuple[str] = (
+        "username",
+        "slug",
+        "name",
+        "surname",
+    )
+    list_filter: Tuple[str] = (
+        CommonStateFilter,
+    )
+    list_display_links: Tuple[str] = (
+        "username",
+        "slug",
+    )
+    list_editable: Sequence[str] = (
+        "name",
+        "surname",
+    )
+
+    def get_is_deleted(self, obj: Optional[Playlist] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return mark_safe(
+                '<p style="color:red; font-weight:bold; font-size:17px; margin:0;">\
+Исполнитель удалён</p>'
+            )
+        return mark_safe(
+                '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
+Исполнитель не удалён</p>'
+            )
+    get_is_deleted.short_description = "Существование исполнителя"
+    get_is_deleted.empty_value_display = "Исполнитель не удалён"
