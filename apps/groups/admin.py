@@ -51,6 +51,7 @@ class GroupModel(admin.ModelAdmin):  # noqa
         'followers',
     )
     list_display: Tuple[str] = (
+        "id",
         'name',
         'slug',
         "get_is_deleted",
