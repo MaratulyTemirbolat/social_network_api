@@ -5,7 +5,6 @@ from typing import (
     Optional,
     Dict,
 )
-from translate import Translator
 
 from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
@@ -119,4 +118,38 @@ class PrivilegeModel(admin.ModelAdmin):  # noqa
 
 @admin.register(Role)
 class RoleModel(admin.ModelAdmin):  # noqa
-    pass
+    readonly_fields: Sequence[str] = (
+        "datetime_deleted",
+        "datetime_created",
+        "datetime_updated",
+    )
+    list_display: Tuple[str] = (
+        "name", "slug",
+        "get_is_deleted",
+    )
+    filter_horizontal: Tuple[str] = (
+        "privileges",
+    )
+    list_filter: Tuple[str, Any] = (
+        CommonStateFilter,
+        "privileges",
+    )
+    search_fields: Tuple[str] = (
+        "name", "slug",
+    )
+
+    def get_readonly_fields(
+        self,
+        request: WSGIRequest,
+        obj: Optional[Role] = None
+    ) -> Tuple[str]:  # noqa
+        if obj:
+            return self.readonly_fields + ("name", "slug",)
+        return self.readonly_fields
+
+    def get_is_deleted(self, obj: Optional[Role] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return "Роль удалена"
+        return "Роль не удалена"
+    get_is_deleted.short_description = "Существование роли"
+    get_is_deleted.empty_value_display = "Роль не удалена"
