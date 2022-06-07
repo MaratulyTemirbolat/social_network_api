@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
 
 from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
@@ -66,6 +67,11 @@ class Category(AbstractDateTime):  # noqa
 
 
 class News(AbstractDateTime):  # noqa
+    NEWS_MAX_NAME_LEN = 200
+    title = models.CharField(
+        max_length=NEWS_MAX_NAME_LEN,
+        verbose_name="Наименование"
+    )
     photo = models.ImageField(
         upload_to="photos/news/%Y/%m/%d",
         verbose_name="Миниатюра"
@@ -118,6 +124,19 @@ class News(AbstractDateTime):  # noqa
     def __str__(self) -> str:  # noqa
         return f'Новость {self.content[:50]}'
 
+    def is_user_group_null(self) -> str:  # noqa
+        if not self.author and not self.group:
+            raise ValidationError(
+                "Вы должны заполнить хотя бы либо атора новости, либо группу",
+                code="news_user_group_error"
+            )
+
+    def clean(self) -> None:  # noqa
+        self.is_user_group_null()
+        return super().clean()
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        return super().save(*args, **kwargs)
 
 class Comment(AbstractDateTime):  # noqa
     content = models.TextField(
