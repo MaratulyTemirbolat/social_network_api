@@ -122,7 +122,7 @@ class News(AbstractDateTime):  # noqa
         )
 
     def __str__(self) -> str:  # noqa
-        return f'Новость {self.content[:50]}'
+        return f'Новость "{self.title}"'
 
     def is_user_group_null(self) -> str:  # noqa
         if not self.author and not self.group:
@@ -138,9 +138,11 @@ class News(AbstractDateTime):  # noqa
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
         return super().save(*args, **kwargs)
 
+
 class Comment(AbstractDateTime):  # noqa
     content = models.TextField(
-        verbose_name="Контент"
+        verbose_name="Контент",
+        help_text="Контент вашего комментария"
     )
     likes = models.ManyToManyField(
         to=CustomUser,
@@ -152,13 +154,15 @@ class Comment(AbstractDateTime):  # noqa
         to=CustomUser,
         on_delete=models.RESTRICT,
         related_name="comments",
-        verbose_name="Владелец комментария"
+        verbose_name="Владелец комментария",
+        help_text="Тот, кто оставил комментарий"
     )
     news = models.ForeignKey(
         to=News,
         on_delete=models.RESTRICT,
         related_name="comments",
-        verbose_name="Новость"
+        verbose_name="Новость",
+        help_text="Комментриуем какую новость"
     )
 
     class Meta:  # noqa

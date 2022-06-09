@@ -13,6 +13,7 @@ from news.models import (
     Tag,
     Category,
     News,
+    Comment,
 )
 from abstracts.filters import (
     CommonStateFilter,
@@ -187,3 +188,67 @@ class NewsModel(admin.ModelAdmin):  # noqa
             return mark_safe(f'<img src="{obj.photo.url}" height="100">')
     get_photo.short_description = "Фотография новости"
     get_photo.empty_value_display = "No photo uploaded"
+
+
+@admin.register(Comment)
+class CommentModel(admin.ModelAdmin):  # noqa
+    fieldsets: Tuple[Tuple[str, Dict[str, Tuple[str]]]] = (
+        ('Информация о комментарии', {
+            'fields': (
+                'content',
+                'commentator',
+                'news',
+            ),
+        }),
+        ('Лайки пользователей на данный комментарий', {
+            'fields': (
+                'likes',
+            ),
+        }),
+        ('История комментария', {
+            'fields': (
+                'datetime_created',
+                'datetime_deleted',
+                'datetime_updated',
+            ),
+        })
+    )
+    readonly_fields: Tuple[str] = (
+        "datetime_deleted",
+        "datetime_updated",
+        "datetime_created",
+    )
+    filter_horizontal: Tuple[str] = (
+        "likes",
+    )
+    list_display: Tuple[str] = (
+        "commentator",
+        "news",
+        "get_shorted_content",
+        "get_is_deleted",
+    )
+    list_filter: Tuple[Any] = (
+        CommonStateFilter,
+    )
+    search_fields: Tuple[str] = (
+        "content",
+    )
+    save_on_top: bool = True
+
+    def get_shorted_content(self, obj: Optional[Comment] = None) -> Optional[str]:  # noqa
+        if obj:
+            return f'{obj.content[:50]}...'
+    get_shorted_content.short_description = "Контент комментария"
+
+    def get_is_deleted(self, obj: Optional[Comment] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return mark_safe(
+                '<p style="color:red; font-weight:bold; font-size:17px; margin:0;">\
+Комментарий удален</p>'
+            )
+        return mark_safe(
+                '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
+Комментарий не удален</p>'
+            )
+    get_is_deleted.short_description = "Существование комментария"
+    get_is_deleted.empty_value_display = "Комментарий не удален"
