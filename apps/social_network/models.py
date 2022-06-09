@@ -32,7 +32,7 @@ class ComplainReason(AbstractDateTime):  # noqa
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:  # noqa
-        return f"Причина жалобы: {self.name}"
+        return f"Причина: \"{self.name}\""
 
 
 class Complain(AbstractDateTime):  # noqa
