@@ -22,19 +22,6 @@ from abstracts.filters import (
 
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):  # noqa
-    add_fieldsets = (
-        (None, {
-            'classes': (
-                'wide',
-            ),
-            'fields': (
-                'name',
-                'slug',
-                'is_group',
-                'photo',
-            ),
-        }),
-    )
     fields: Tuple[str] = (
         ("name", "slug",),
         "is_group", "photo",
@@ -70,7 +57,6 @@ class ChatAdmin(admin.ModelAdmin):  # noqa
     ) -> tuple:  # noqa
         if not obj:
             return self.readonly_fields
-
         return self.readonly_fields + (
             'slug',
         )

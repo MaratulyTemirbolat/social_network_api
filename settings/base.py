@@ -35,7 +35,10 @@ PROJECT_APPS = [
     'groups.apps.GroupsConfig',
     'music.apps.MusicConfig',
     'news.apps.NewsConfig',
-    'social_network.apps.SocialNetworkConfig',
+    'locations.apps.LocationsConfig',
+    'videos.apps.VideosConfig',
+    'complains.apps.ComplainsConfig',
+    'photos.apps.PhotosConfig',
 ]
 INSTALLED_APPS = DJANGO_AND_THIRD_PARTY_APPS + PROJECT_APPS
 # ----------------------------------------------------------

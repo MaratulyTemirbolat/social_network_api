@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import QuerySet
 
 from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
