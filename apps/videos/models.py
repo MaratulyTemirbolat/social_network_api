@@ -23,6 +23,7 @@ class Video(AbstractDateTime):  # noqa
     )
     keepers = models.ManyToManyField(
         to=CustomUser,
+        blank=True,
         related_name="added_videos",
         verbose_name="Имеется пользователями"
     )
