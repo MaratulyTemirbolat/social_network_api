@@ -3,7 +3,6 @@ from typing import (
     Tuple,
     Any,
     Optional,
-    Dict,
 )
 
 from django.contrib import admin

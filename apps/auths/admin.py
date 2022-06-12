@@ -61,7 +61,7 @@ class CustomUserAdmin(UserAdmin):  # noqa
     # NOTE: Used to define the fields that
     #       will be displayed on the create-user page
     #
-    add_fieldsets = (
+    add_fieldsets: Tuple = (
         (None, {
             'classes': (
                 'wide',
@@ -127,7 +127,6 @@ class CustomUserAdmin(UserAdmin):  # noqa
     ) -> tuple:  # noqa
         if not obj:
             return self.readonly_fields
-
         return self.readonly_fields + (
             'email',
         )
