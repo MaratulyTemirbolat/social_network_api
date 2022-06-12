@@ -51,7 +51,7 @@ class City(AbstractDateTime):  # noqa
 
     class Meta:  # noqa
         verbose_name = "Город"
-        verbose_name_plural = "Столицы"
+        verbose_name_plural = "Города"
         ordering = (
             "-datetime_updated",
         )
