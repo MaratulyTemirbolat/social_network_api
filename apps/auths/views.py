@@ -13,8 +13,19 @@ from rest_framework.request import Request as DRF_Request
 
 from django.db.models import QuerySet
 
-from auths.models import CustomUser
-from auths.serializers import CustomUserSerializer
+from auths.models import (
+    CustomUser,
+    # Friends,
+    Phone,
+)
+from auths.serializers import (
+    CustomUserSerializer,
+    # FriendsSerializer,
+    PhoneSerializer,
+)
+from abstracts.paginators import (
+    AbstractPageNumberPaginator,
+)
 from abstracts.handlers import DRFResponseHandler
 
 
@@ -149,6 +160,8 @@ class CustomUserViewSetTrial(ViewSet):  # noqa
     permission_classes: tuple = (
         permissions.AllowAny,
     )
+    pagination_class: AbstractPageNumberPaginator = \
+        AbstractPageNumberPaginator
     queryset: QuerySet[CustomUser] = \
         CustomUser.objects.get_not_deleted()
     serializer_class: CustomUserSerializer = CustomUserSerializer
@@ -165,3 +178,183 @@ class CustomUserViewSetTrial(ViewSet):  # noqa
             }
         )
         return response
+
+
+class PhoneCustomUserViewSet(DRFResponseHandler, ViewSet):
+    """PhoneCustomUserViewSet."""
+
+    permission_classes: tuple = (
+        permissions.AllowAny,
+    )
+    queryset: QuerySet[Phone] = \
+        Phone.objects.get_not_deleted().select_related('owner')
+    # queryset: QuerySet[Phone] = \
+    #     Phone.objects.get_not_deleted()
+    serializer_class: PhoneSerializer = PhoneSerializer
+
+    def list(self, request: DRF_Request) -> DRF_Response:
+        """Return list of all users."""
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            # data=self.queryset.values(
+            #     'id', 'phone', 'owner__slug',
+            #     'owner__first_name', 'owner__last_name'
+            # ),
+            data=self.queryset,
+            serializer_class=self.serializer_class,
+            many=True
+        )
+
+        return response
+
+    def retrieve(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
+        """Handle GET-request with ID to show users phones."""
+        # Retrieving certain object
+        #
+        custom_user_phones: Optional[QuerySet] = None
+        try:
+            custom_user = self.queryset.filter(
+                owner_id
+            )
+        except CustomUser.DoesNotExist:
+            return DRF_Response(
+                {'response': 'Не нашел такого юзера'}
+            )
+
+        serializer: CustomUserSerializer = \
+            CustomUserSerializer(
+                custom_user
+            )
+
+        return DRF_Response(
+            {'response': serializer.data}
+        )
+
+
+class PhoneViewSet(DRFResponseHandler, ViewSet):
+    """PhoneViewset."""
+
+    # permission_classes: tuple = (
+    #     permissions.IsAuthenticated,
+    # )
+    permission_classes: tuple = (
+        permissions.AllowAny,
+    )
+    queryset: QuerySet[Phone] = \
+        Phone.objects.all()
+    serializer_class: PhoneSerializer = PhoneSerializer
+    pagination_class: AbstractPageNumberPaginator = \
+        AbstractPageNumberPaginator
+
+    def get_queryset(self) -> QuerySet[Phone]:  # noqa
+        return self.queryset.get_not_deleted()
+
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="deleted_phones",
+        permission_classes=(
+            permissions.AllowAny,
+        )
+    )
+    def get_deleted_phones(self, request: DRF_Request) -> DRF_Response:
+        """Handle POST-request to show custom-info about custom_users."""
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.queryset.get_deleted(),
+            serializer_class=self.serializer_class,
+            many=True,
+            paginator=self.pagination_class()
+        )
+        return response
+
+    def list(self, request: DRF_Request) -> DRF_Response:
+        """Return list of all non-deleted phones."""
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.get_queryset(),
+            serializer_class=self.serializer_class,
+            many=True,
+            paginator=self.pagination_class()
+        )
+
+        return response
+
+    def retrieve(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
+        """Handle GET-request with ID to show users phones."""
+        # Retrieving certain object
+        #
+        phone: Optional[Phone] = None
+        try:
+            phone = self.queryset.get(
+                id=pk
+            )
+        except Phone.DoesNotExist:
+            return DRF_Response(
+                {'response': 'Не нашел такой телефон'}
+            )
+        if phone.datetime_deleted:
+            return DRF_Response(
+                {'response': 'Данный телефон удален'}
+            )
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=phone,
+            serializer_class=self.serializer_class,
+            many=False
+        )
+        return response
+
+    # НЕ РАБОТАЕТ
+    def create(self, request: DRF_Request) -> DRF_Response:
+        """Handle POST-request to show custom_users."""
+        sent_data: dict = request.data.copy()
+        # sent_data["owner"] = request.user
+        sent_data["datetime_created"] = datetime.now()
+        # breakpoint()
+        serializer: PhoneSerializer = \
+            self.serializer_class(
+                data=request.data
+            )
+        breakpoint()
+        if serializer.is_valid():
+            serializer.save()
+            return DRF_Response(
+                {'data': f'Объект {serializer.id} создан'}
+            )
+        return DRF_Response(
+            {'response': 'Объект не создан'}
+        )
+
+    def destroy(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
+        """Handle DELETE-request with ID to show custom_user."""
+        phone: Optional[Phone] = None
+        try:
+            phone = self.get_queryset().get(
+                id=pk
+            )
+        except Phone.DoesNotExist:
+            return DRF_Response(
+                {'data': f'Объект с ID: {pk} не найден'}
+            )
+
+        phone.delete()
+        return DRF_Response(
+            {'data': f'Телефон {phone.phone} удален'}
+        )
+
+    def update(self, request: DRF_Request, pk: int = None) -> DRF_Response:
+        """Handle PUT-request with ID to show custom_user."""
+        return DRF_Response(
+            {'response': 'Метод update'}
+        )
+
+    def partial_update(
+        self,
+        request: DRF_Request,
+        pk: int = 0
+    ) -> DRF_Response:
+        """Handle PATCH-request with ID to show custom_user."""
+        return DRF_Response(
+            {'response': 'Метод partial_update'}
+        )

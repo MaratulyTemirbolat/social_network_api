@@ -25,6 +25,7 @@ from django.conf.urls.static import static
 
 from auths.views import (
     CustomUserViewSetTrial,
+    PhoneViewSet,
 )
 
 urlpatterns = [
@@ -46,7 +47,8 @@ if settings.DEBUG:
 router: DefaultRouter = DefaultRouter(
     trailing_slash=False
 )
-router.register('auths', CustomUserViewSetTrial)
+router.register('auths/users', CustomUserViewSetTrial)
+router.register('auths/phones', PhoneViewSet)
 
 urlpatterns += [
     path(

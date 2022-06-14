@@ -24,8 +24,8 @@ class DRFResponseHandler:
     ) -> DRF_Response:  # noqa
         if paginator:
             objects: list = paginator.paginate_queryset(
-                data,
-                request
+                queryset=data,
+                request=request
             )
             serializer: Serializer = serializer_class(
                 objects,

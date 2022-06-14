@@ -10,7 +10,7 @@ from rest_framework.utils.serializer_helpers import ReturnList
 class AbstractPageNumberPaginator(PageNumberPagination):
     """AbstractPageNumberPaginator."""
 
-    page_size: int = 2
+    page_size: int = 5
     page_size_query_param: str = 'page_size'
     page_query_param: str = 'page'
     max_page_size: int = 10

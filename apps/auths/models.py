@@ -14,7 +14,10 @@ from django.core.validators import (
     RegexValidator,
 )
 
-from abstracts.models import AbstractDateTime
+from abstracts.models import (
+    AbstractDateTime,
+    AbstractDateTimeQuerySet,
+)
 from auths.validators import the_same_users_validator
 
 
@@ -133,10 +136,10 @@ class CustomUser(
     friendss = models.ManyToManyField(
         to='self',
         blank=True,
-        verbose_name="Друзья",
         through="Friends",
         symmetrical=False,
-        related_name="Following"
+        verbose_name="Друзья",
+        related_name="following"
     )
     last_seen = models.DateTimeField(
         auto_now=True,
@@ -229,6 +232,12 @@ class Friends(models.Model):  # noqa
         super().save(*args, **kwargs)
 
 
+class PhoneQuerySet(AbstractDateTimeQuerySet):
+    """PhoneQuerySet."""
+
+    pass
+
+
 class Phone(AbstractDateTime):  # noqa
     phone = models.CharField(
         max_length=12,
@@ -249,6 +258,7 @@ class Phone(AbstractDateTime):  # noqa
         related_name="phones",
         verbose_name="Владелец"
     )
+    objects = PhoneQuerySet.as_manager()
 
     class Meta:  # noqa
         verbose_name = "Телефон"

@@ -120,7 +120,10 @@ class Command(BaseCommand):
             #     CustomUser.objects.get_or_create(**cur_user)
             # print(f'Пользователь {username} успешно создан')
         CustomUser.objects.bulk_create(model_users)
-        print("Пользователи успешно созданы")
+        if is_super_user:
+            print("Супер пользователи успешно созданы")
+        else:
+            print("Пользователи успешно созданы")
 
     def __generate_phones(self) -> None:
         def get_phone() -> str:
@@ -152,6 +155,7 @@ class Command(BaseCommand):
                 )
             )
         Phone.objects.bulk_create(all_models)
+        print("Телефоны успешно созданы")
 
     def __generate_friends(self) -> None:
         total_users: int = CustomUser.objects.count()
@@ -179,6 +183,7 @@ class Command(BaseCommand):
                     )
                 )
         Friends.objects.bulk_create(friends_model)
+        print("Все друзья успешно созданы")
 
     def handle(self, *args: tuple, **kwargs: dict) -> None:
         # Автоматически вызывается, когда вызывается generate_data файл

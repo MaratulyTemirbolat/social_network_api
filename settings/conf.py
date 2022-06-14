@@ -28,6 +28,14 @@ DEBUG_TOOLBAR_PANELS = [
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 
 # ------------------------------------------------
+# DRF settings
+#
+REST_FRAMEWORK = {
+   'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser', ),
+}
+
+
+# ------------------------------------------------
 # Shell plus configuration
 #
 SHELL_PLUS_PRE_IMPORTS = [
