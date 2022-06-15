@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import QuerySet
+from django.core.exceptions import ValidationError
 
 from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
@@ -47,6 +49,13 @@ class Chat(AbstractDateTime):  # noqa
         return f"Чат \"{self.name}\""
 
 
+class ChatMemberQuerySet(QuerySet):
+    def get_number_of_members(self, chat_id: int) -> int:
+        return self.filter(
+            chat_id=chat_id
+        ).count()
+
+
 class ChatMember(models.Model):  # noqa
     CHAT_USER_NAME_MAX_LEN = 150
     chat = models.ForeignKey(
@@ -66,6 +75,7 @@ class ChatMember(models.Model):  # noqa
         blank=True,
         verbose_name="Никнейм в чате"
     )
+    objects = ChatMemberQuerySet.as_manager()
 
     class Meta:  # noqa
         verbose_name = "Член чата"
@@ -79,6 +89,30 @@ class ChatMember(models.Model):  # noqa
                 name="unique_chat_user"
             ),
         ]
+
+    def __get_number_of_members(self) -> int:
+        return ChatMember.objects.filter(
+            chat_id=self.chat_id
+        ).count()
+
+    def is_amount_members_sufficient(self) -> None:
+        TWO_MEMBERS = 2
+        if not self.chat.is_group:
+            chats_members: int = self.__get_number_of_members()
+            if chats_members >= TWO_MEMBERS:
+                raise ValidationError(
+                    message="Нелья добавлять еще людей не в групповой чат",
+                    code="max_chat_members"
+                )
+
+    def clean(self) -> None:
+        self.is_amount_members_sufficient()
+        return super().clean()
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        if not self.chat_name:
+            self.chat_name = self.user.username
+        return super().save(*args, **kwargs)
 
     def __str__(self) -> str:  # noqa
         return f'Пользователь {self.user} в чате \

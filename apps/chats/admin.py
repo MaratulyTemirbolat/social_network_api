@@ -32,8 +32,8 @@ class ChatAdmin(admin.ModelAdmin):  # noqa
         "datetime_deleted",
     )
     list_display: Tuple[str] = (
-        "name", "slug",
-        "get_photo",
+        "id", "name", "slug",
+        "get_photo", "get_is_deleted",
     )
     search_fields: Sequence[str] = (
         "name", "slug",
@@ -42,6 +42,10 @@ class ChatAdmin(admin.ModelAdmin):  # noqa
         "is_group",
         CommonStateFilter
     )
+    list_display_links: Tuple[str] = (
+        "id", "name", "slug",
+    )
+    list_per_page: int = 10
     save_on_top: bool = True
 
     def get_photo(self, obj: Optional[Chat] = None) -> str:  # noqa
@@ -61,10 +65,32 @@ class ChatAdmin(admin.ModelAdmin):  # noqa
             'slug',
         )
 
+    def get_is_deleted(self, obj: Optional[Chat] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return mark_safe(
+                '<p style="color:red; font-weight:bold; font-size:17px; margin:0;">\
+Чат удалён</p>'
+            )
+        return mark_safe(
+                '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
+Чат не удален</p>'
+            )
+    get_is_deleted.short_description = "Существование чата"
+    get_is_deleted.empty_value_display = "Чат не удален"
+
 
 @admin.register(ChatMember)
 class ChatMemberAdmin(admin.ModelAdmin):  # noqa
-    pass
+    list_display: Tuple[str] = (
+        "id", "chat", "user", "chat_name",
+    )
+    list_per_page: int = 25
+    list_display_links: Tuple[str] = (
+        "id", "chat", "user",
+    )
+    search_fields: Sequence[str] = (
+        "chat_name",
+    )
 
 
 @admin.register(Message)
@@ -74,3 +100,37 @@ class MessageAdmin(admin.ModelAdmin):  # noqa
         "datetime_deleted",
         "datetime_updated",
     )
+    list_display: Tuple[str] = (
+        "id", "chat", "owner",
+        "get_shorted_content",
+        "get_is_deleted",
+    )
+    search_fields: Sequence[str] = (
+        "id", "content",
+    )
+    list_filter: Tuple[Any] = (
+        CommonStateFilter,
+    )
+    list_display_links: Tuple[str] = (
+        "id", "owner", "chat",
+    )
+    list_per_page: int = 20
+
+    def get_is_deleted(self, obj: Optional[Message] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return mark_safe(
+                '<p style="color:red; font-weight:bold; font-size:17px; margin:0;">\
+Сообщение удалено</p>'
+            )
+        return mark_safe(
+                '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
+Сообщение не удалено</p>'
+            )
+    get_is_deleted.short_description = "Существование сообщения"
+    get_is_deleted.empty_value_display = "Сообщение не удалено"
+
+    def get_shorted_content(self, obj: Message):
+        """Get short version of content."""
+        if obj.content:
+            return f"{obj.content[:25]}..."
+    get_shorted_content.short_description = "Контент сообщения"

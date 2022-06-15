@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
     help = 'Custom command for filling up database.'
 
-    __email_patterns: tuple = (
+    __email_patterns: Tuple[str] = (
         'gmail.com', 'outlook.com', 'yahoo.com',
         'inbox.ru', 'inbox.ua', 'inbox.kz',
         'yandex.ru', 'yandex.ua', 'yandex.kz',

@@ -180,6 +180,7 @@ class CustomUserViewSetTrial(ViewSet):  # noqa
         return response
 
 
+# ПРОБЛЕМЫ
 class PhoneCustomUserViewSet(DRFResponseHandler, ViewSet):
     """PhoneCustomUserViewSet."""
 
@@ -231,6 +232,7 @@ class PhoneCustomUserViewSet(DRFResponseHandler, ViewSet):
         )
 
 
+# ПРОБЛЕМЫ
 class PhoneViewSet(DRFResponseHandler, ViewSet):
     """PhoneViewset."""
 
