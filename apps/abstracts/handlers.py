@@ -1,5 +1,7 @@
 from typing import (
     Optional,
+    Dict,
+    Any,
 )
 
 
@@ -20,7 +22,8 @@ class DRFResponseHandler:
         data: QuerySet,
         serializer_class: Serializer,
         many: bool = False,
-        paginator: Optional[BasePagination] = None
+        paginator: Optional[BasePagination] = None,
+        serializer_context: Optional[Dict[str, Any]] = None
     ) -> DRF_Response:  # noqa
         if paginator:
             objects: list = paginator.paginate_queryset(
@@ -29,7 +32,8 @@ class DRFResponseHandler:
             )
             serializer: Serializer = serializer_class(
                 objects,
-                many=many
+                many=many,
+                context=serializer_context
             )
             response: DRF_Response = \
                 paginator.get_paginated_response(
@@ -39,7 +43,8 @@ class DRFResponseHandler:
 
         serializer: Serializer = serializer_class(
             data,
-            many=many
+            many=many,
+            context=serializer_context
         )
         response: DRF_Response = DRF_Response(
             {

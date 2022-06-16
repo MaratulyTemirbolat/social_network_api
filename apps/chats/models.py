@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import QuerySet
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 
 from abstracts.models import AbstractDateTime
 from auths.models import CustomUser
@@ -44,6 +45,11 @@ class Chat(AbstractDateTime):  # noqa
         ordering = (
             "-datetime_updated",
         )
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+        if self.slug:
+            self.slug = slugify(self.slug)
+        return super().save(*args, **kwargs)
 
     def __str__(self) -> str:  # noqa
         return f"Чат \"{self.name}\""

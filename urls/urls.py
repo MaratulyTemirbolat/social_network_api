@@ -27,6 +27,9 @@ from auths.views import (
     CustomUserViewSetTrial,
     PhoneViewSet,
 )
+from chats.views import (
+    ChatViewSet,
+)
 
 urlpatterns = [
     path(settings.ADMIN_SITE_URL, admin.site.urls),
@@ -49,6 +52,7 @@ router: DefaultRouter = DefaultRouter(
 )
 router.register('auths/users', CustomUserViewSetTrial)
 router.register('auths/phones', PhoneViewSet)
+router.register('chats/chats', ChatViewSet)
 
 urlpatterns += [
     path(
