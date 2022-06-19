@@ -63,6 +63,12 @@ class Command(BaseCommand):
     def __generate_chats(self, chats_number: int = 0) -> None:
         """Chats generation with required quantity."""
         chats_templates_len: int = len(self.__chats_templates)
+        existed_users_id: Tuple[int] = tuple(
+            CustomUser.objects.get_not_deleted().values_list(
+                "id",
+                flat=True
+            )
+        )
 
         def generate_name(index: int) -> str:
             """Get new name of group with index."""
@@ -83,11 +89,13 @@ class Command(BaseCommand):
             name: str = generate_name(existed_chats)
             slug: str = slugify(name)
             is_group: bool = get_is_group()
+            owner_id: int = choice(existed_users_id)
             groups.append(
                 Chat(
                     name=name,
                     slug=slug,
-                    is_group=is_group
+                    is_group=is_group,
+                    owner_id=owner_id
                 )
             )
         Chat.objects.bulk_create(groups)

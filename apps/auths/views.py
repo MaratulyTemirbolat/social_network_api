@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response as DRF_Response
 from rest_framework.request import Request as DRF_Request
+from rest_framework.generics import ListCreateAPIView
 
 from django.db.models import QuerySet
 
@@ -181,58 +182,6 @@ class CustomUserViewSetTrial(ViewSet):  # noqa
 
 
 # ПРОБЛЕМЫ
-class PhoneCustomUserViewSet(DRFResponseHandler, ViewSet):
-    """PhoneCustomUserViewSet."""
-
-    permission_classes: tuple = (
-        permissions.AllowAny,
-    )
-    queryset: QuerySet[Phone] = \
-        Phone.objects.get_not_deleted().select_related('owner')
-    # queryset: QuerySet[Phone] = \
-    #     Phone.objects.get_not_deleted()
-    serializer_class: PhoneSerializer = PhoneSerializer
-
-    def list(self, request: DRF_Request) -> DRF_Response:
-        """Return list of all users."""
-        response: DRF_Response = self.get_drf_response(
-            request=request,
-            # data=self.queryset.values(
-            #     'id', 'phone', 'owner__slug',
-            #     'owner__first_name', 'owner__last_name'
-            # ),
-            data=self.queryset,
-            serializer_class=self.serializer_class,
-            many=True
-        )
-
-        return response
-
-    def retrieve(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
-        """Handle GET-request with ID to show users phones."""
-        # Retrieving certain object
-        #
-        custom_user_phones: Optional[QuerySet] = None
-        try:
-            custom_user = self.queryset.filter(
-                owner_id
-            )
-        except CustomUser.DoesNotExist:
-            return DRF_Response(
-                {'response': 'Не нашел такого юзера'}
-            )
-
-        serializer: CustomUserSerializer = \
-            CustomUserSerializer(
-                custom_user
-            )
-
-        return DRF_Response(
-            {'response': serializer.data}
-        )
-
-
-# ПРОБЛЕМЫ
 class PhoneViewSet(DRFResponseHandler, ViewSet):
     """PhoneViewset."""
 
@@ -360,3 +309,8 @@ class PhoneViewSet(DRFResponseHandler, ViewSet):
         return DRF_Response(
             {'response': 'Метод partial_update'}
         )
+
+
+class TrialApiView(ListCreateAPIView):
+    queryset = Phone.objects.all()
+    serializer_class = PhoneSerializer

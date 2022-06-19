@@ -30,6 +30,12 @@ class Chat(AbstractDateTime):  # noqa
         blank=True,
         verbose_name='Миниатюра'
     )
+    owner = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.RESTRICT,
+        related_name="owned_chats",
+        verbose_name="Создатель чата"
+    )
     members = models.ManyToManyField(
         to=CustomUser,
         through="ChatMember",
@@ -55,8 +61,8 @@ class Chat(AbstractDateTime):  # noqa
         return f"Чат \"{self.name}\""
 
 
-class ChatMemberQuerySet(QuerySet):
-    def get_number_of_members(self, chat_id: int) -> int:
+class ChatMemberQuerySet(QuerySet):  # noqa
+    def get_number_of_members(self, chat_id: int) -> int:  # noqa
         return self.filter(
             chat_id=chat_id
         ).count()

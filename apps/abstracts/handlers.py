@@ -25,6 +25,8 @@ class DRFResponseHandler:
         paginator: Optional[BasePagination] = None,
         serializer_context: Optional[Dict[str, Any]] = None
     ) -> DRF_Response:  # noqa
+        if not serializer_context:
+            serializer_context = {"request": request}
         if paginator:
             objects: list = paginator.paginate_queryset(
                 queryset=data,

@@ -2,6 +2,9 @@ from typing import (
     Tuple,
     Optional,
 )
+from datetime import datetime
+
+from django.utils.text import slugify
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -12,6 +15,8 @@ from rest_framework.serializers import (
     BooleanField,
     SerializerMethodField,
 )
+from traitlets import default
+from auths.models import CustomUser
 
 from chats.models import (
     Chat,
@@ -19,40 +24,80 @@ from chats.models import (
 )
 
 
-class ChatMembersSerailizer(ModelSerializer):
+class ChatMembersListSerailizer(ModelSerializer):
     """Serializer class between Chat and its members."""
-
-    id: IntegerField = IntegerField(read_only=True)
-    slug: SlugField = SlugField(read_only=True)
-    username: CharField = CharField(read_only=True)
 
     class Meta:
         """Class for serializer structure."""
 
         model: ChatMember = ChatMember
         fields: Tuple[str] = (
-            "id", "slug", "username",
+            "user",
+            "chat_name",
         )
 
 
-class ChatModelSerializer(ModelSerializer):
+class ChatSingleSerializer(ModelSerializer):
+    """Chat serializer for Single instance."""
+
+    members: SerializerMethodField = SerializerMethodField(
+        method_name="get_members"
+    )
+
+    class Meta:
+        """Class for serializer structure."""
+
+        model: Chat = Chat
+        fields: Tuple[str] = (
+            "id", "name", "slug",
+            "is_group", "datetime_created",
+            "photo_url", "is_deleted",
+            "members",
+        )
+
+    def get_members(self, obj: Chat):  # noqa
+        # qset = ChatMember.objects.filter(
+        #     chat_id=obj.id
+        # )
+        qset = Chat.objects.get_not_deleted().prefetch_related(
+            "members"
+        )
+        # breakpoint()
+        return [ChatMembersSerailizer(m).data for m in qset]
+
+
+class TrialModelChatSer(ModelSerializer):
+    class Meta:
+        model = Chat
+        fields = "__all__"
+
+
+class ChatOwnerSerializer(ModelSerializer):
+    class Meta:
+        model: CustomUser = CustomUser
+        fields: Tuple[str] = (
+            "id",
+            "slug",
+            "username",
+        )
+
+
+class ChatBaseSerializer(ModelSerializer):
     """Chat serializer by ModelSerializer class."""
 
-    id: IntegerField = IntegerField(read_only=True)
     name: CharField = CharField()
-    slug: SlugField = SlugField(read_only=True)
-    is_group: BooleanField = BooleanField(read_only=True)
-    photo_url: SerializerMethodField = SerializerMethodField(
-        method_name="get_photo_url",
-    )
+    slug: SlugField = SlugField()
+    is_group: BooleanField = BooleanField()
+    # photo_url: SerializerMethodField = SerializerMethodField(
+    #     method_name="get_photo_url",
+    # )
     datetime_created: DateTimeField = DateTimeField(
-        format="%Y-%m-%d %H:%M"
+        format="%Y-%m-%d %H:%M",
+        default=datetime.now(),
+        read_only=True
     )
     is_deleted: SerializerMethodField = SerializerMethodField(
         method_name="get_is_deleted"
-    )
-    members: ChatMembersSerailizer = ChatMembersSerailizer(
-        many=True
     )
 
     class Meta:
@@ -60,9 +105,15 @@ class ChatModelSerializer(ModelSerializer):
 
         model: Chat = Chat
         fields: Tuple[str] = (
-            "id", "name", "slug",
-            "is_group", "datetime_created",
-            "photo_url", "is_deleted",
+            "id",
+            "name",
+            "slug",
+            "is_group",
+            "datetime_created",
+            "photo",
+            # "photo_url",
+            "is_deleted",
+            "owner",
             "members",
         )
         # fields: str = "__all__"
@@ -80,3 +131,22 @@ class ChatModelSerializer(ModelSerializer):
         if obj.datetime_deleted:
             return True
         return False
+
+
+class ChatViewSerializer(ChatBaseSerializer):
+    """Chat serializer by ModelSerializer class."""
+
+    members: ChatMembersListSerailizer = ChatMembersListSerailizer(
+        source="chatmember_set",
+        many=True,
+        required=False,
+        allow_null=True
+    )
+
+    owner: ChatOwnerSerializer = ChatOwnerSerializer()
+
+
+class ChatCreateSerializer(ChatBaseSerializer):
+    """Chat serializer by ModelSerializer class."""
+
+    pass

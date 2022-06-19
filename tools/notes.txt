@@ -1,0 +1,3 @@
+ChatMember.objects.raw("SELECT chats_chat.id, chats_chat.name, auths_customuser.id, auths_customuser.slug, chats_chatmember.chat_name FRO
+    ...: M chats_chatmember JOIN chats_chat ON chats_chat.id = chats_chatmember.chat_id JOIN auths_customuser ON auths_customuser.id = chats_chatm
+    ...: ember.user_id")

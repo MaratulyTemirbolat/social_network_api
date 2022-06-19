@@ -26,13 +26,17 @@ from django.conf.urls.static import static
 from auths.views import (
     CustomUserViewSetTrial,
     PhoneViewSet,
+    TrialApiView,
 )
 from chats.views import (
     ChatViewSet,
+    ChatModelApiView
 )
 
 urlpatterns = [
     path(settings.ADMIN_SITE_URL, admin.site.urls),
+    path("api/v1/pp", TrialApiView.as_view()),
+    path("api/v1/cc", ChatModelApiView.as_view())
 ] + static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
