@@ -95,3 +95,18 @@ class CustomUserSerializer(ModelSerializer):
             "datetime_deleted",
             "friendss",
         )
+
+
+class CustomUserShortSerializer(ModelSerializer):
+    """CustomUserShortSerializer."""
+
+    class Meta:
+        """Customizing own serializer."""
+
+        model: CustomUser = CustomUser
+        fields: Tuple[str] = (
+            "id",
+            "slug",
+            "username",
+            "last_login",
+        )

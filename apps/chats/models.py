@@ -55,6 +55,7 @@ class Chat(AbstractDateTime):  # noqa
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
         if self.slug:
             self.slug = slugify(self.slug)
+        # breakpoint()
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:  # noqa
@@ -107,7 +108,7 @@ class ChatMember(models.Model):  # noqa
             chat_id=self.chat_id
         ).count()
 
-    def is_amount_members_sufficient(self) -> None:
+    def is_amount_members_sufficient(self) -> None:  # noqa
         TWO_MEMBERS = 2
         if not self.chat.is_group:
             chats_members: int = self.__get_number_of_members()
@@ -117,11 +118,15 @@ class ChatMember(models.Model):  # noqa
                     code="max_chat_members"
                 )
 
-    def clean(self) -> None:
+    def clean(self) -> None:  # noqa
         self.is_amount_members_sufficient()
         return super().clean()
 
-    def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
+    def save(
+        self,
+        *args: tuple,
+        **kwargs: dict
+    ) -> None:  # noqa
         if not self.chat_name:
             self.chat_name = self.user.username
         return super().save(*args, **kwargs)

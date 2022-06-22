@@ -16,9 +16,8 @@ from rest_framework.request import Request as DRF_Request
 from rest_framework.response import Response as DRF_Response
 from rest_framework.permissions import (
     IsAdminUser,
-    IsAuthenticated,
 )
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.decorators import action
 from rest_framework import status
 
 from chats.models import (
@@ -27,36 +26,10 @@ from chats.models import (
 from chats.serializers import (
     ChatCreateSerializer,
     ChatViewSerializer,
+    ChatViewSingleSerializer,
 )
 from abstracts.handlers import DRFResponseHandler
 from abstracts.paginators import AbstractPageNumberPaginator
-
-
-class ChatModelApiView(ListCreateAPIView):
-    queryset = Chat.objects.all()
-    serializer_class = ChatViewSerializer
-    pagination_class = AbstractPageNumberPaginator
-    permission_classes = ()
-
-    def create(
-        self,
-        request: DRF_Request,
-        *args: Tuple[Any],
-        **kwargs: Dict[str, Any]
-    ):  # noqa
-        self.serializer_class = ChatCreateSerializer
-        my_data = request.data.copy()
-        my_data["slug"] = slugify(my_data["slug"])
-        serializer = self.get_serializer(data=my_data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return DRF_Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
 
 
 class ChatViewSet(DRFResponseHandler, ViewSet):
@@ -66,16 +39,58 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
         Chat.objects.all()
     serializer_class: ChatViewSerializer = ChatViewSerializer
     permission_classes: Tuple[Any] = (
-        IsAuthenticated,
+        # IsAuthenticated,
     )
     pagination_class: AbstractPageNumberPaginator = \
         AbstractPageNumberPaginator
 
+    def get_instance(
+        self,
+        pk: int = 0,
+        is_deleted: bool = False
+    ) -> Optional[Chat]:
+        """Obtain the class instance by primary key."""
+        chat: Optional[Chat] = None
+        try:
+            chat = self.get_queryset().get(id=pk)
+            return chat
+        except Chat.DoesNotExist:
+            return None
+
     def get_queryset(self) -> QuerySet:
         """Queryset method for ORM."""
-        return self.queryset.get_not_deleted().prefetch_related("members")
+        return self.queryset.get_not_deleted().prefetch_related(
+            "members"
+        ).select_related("owner")
 
-    def list(self, request: DRF_Request) -> DRF_Response:
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="deleted_chats",
+        permission_classes=(
+            IsAdminUser,
+        )
+    )
+    def get_deleted_chats(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Get all deleted chats."""
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.queryset.get_deleted(),
+            serializer_class=self.serializer_class,
+            many=True,
+            paginator=self.pagination_class()
+        )
+        return response
+
+    def list(
+        self,
+        request: DRF_Request
+    ) -> DRF_Response:
         """List method for GET-request."""
 #         sql = ChatMember.objects.raw(
 #             "SELECT chats_chat.id, chats_chat.name, auths_customuser.id, \
@@ -94,12 +109,14 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
         )
         return response
 
-    def retrieve(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
+    def retrieve(
+        self,
+        request: DRF_Request,
+        pk: int = 0
+    ) -> DRF_Response:
         """Handle GET-request with ID to show users phones."""
-        chat: Optional[Chat] = None
-        try:
-            chat = self.get_queryset().get(id=pk)
-        except Chat.DoesNotExist:
+        chat: Optional[Chat] = self.get_instance(pk=pk)
+        if not chat:
             return DRF_Response(
                 {'response': 'Не нашел такой чат'}
             )
@@ -107,7 +124,7 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
         response: DRF_Response = self.get_drf_response(
             request=request,
             data=chat,
-            serializer_class=self.serializer_class,
+            serializer_class=ChatViewSingleSerializer,
             many=False
         )
 
@@ -118,14 +135,12 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
         request: DRF_Request,
         *args: Tuple[Any],
         **kwargs: Dict[str, Any]
-    ):  # noqa
+    ) -> DRF_Response:  # noqa
         my_data: QueryDict = request.data.copy()
         my_data["slug"] = slugify(
             my_data["slug"]
         )
         my_data["owner"] = request.user.id
-        # breakpoint()
-        # my_data["members"] = [request.user]
 
         serializer: ChatCreateSerializer = ChatCreateSerializer(
             data=my_data,
@@ -138,3 +153,46 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
             serializer.data,
             status=status.HTTP_201_CREATED
         )
+
+    def partial_update(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PATCH method with provided id."""
+        kwargs['is_partial'] = True
+        return self.update(request, *args, **kwargs)
+
+    def update(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PUT method with provided id."""
+        is_partial: bool = kwargs.pop('is_partial', False)
+
+        pk: Optional[str] = kwargs.get('pk', None)
+        if not pk:
+            return DRF_Response(
+                {"response": "Первичный ключ должен быть предоставлен"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        instance: Optional[Chat] = self.get_instance(pk=pk)
+        if not instance:
+            return DRF_Response(
+                {'response': 'Не нашел такой чат'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer: ChatCreateSerializer = ChatCreateSerializer(
+            instance=instance,
+            data=request.data,
+            partial=is_partial
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return DRF_Response(data=serializer.data)

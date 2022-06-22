@@ -20,7 +20,7 @@ def post_save_chat(
     """Signal for post save chat."""
     # Add owner to the created by him group
 
-    ChatMember.objects.create(
+    ChatMember.objects.get_or_create(
         chat_id=instance.id,
         user_id=instance.owner.id,
         chat_name=instance.owner.slug

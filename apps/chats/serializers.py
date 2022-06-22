@@ -2,26 +2,60 @@ from typing import (
     Tuple,
     Optional,
 )
-from datetime import datetime
-
-from django.utils.text import slugify
+from datetime import (
+    datetime,
+    timedelta,
+)
 
 from rest_framework.serializers import (
     ModelSerializer,
-    IntegerField,
     SlugField,
     DateTimeField,
     CharField,
     BooleanField,
     SerializerMethodField,
 )
-from traitlets import default
-from auths.models import CustomUser
 
+from auths.models import CustomUser
+from auths.serializers import CustomUserShortSerializer
 from chats.models import (
     Chat,
     ChatMember,
+    Message,
 )
+
+
+class MessageModelSerializer(ModelSerializer):
+    """MessageModelSerializer."""
+
+    is_edited: SerializerMethodField = SerializerMethodField(
+        method_name="get_is_edited"
+    )
+    datetime_created: DateTimeField = DateTimeField(
+        format="%Y-%m-%d %H:%M:%s",
+        read_only=True
+    )
+    owner: CustomUserShortSerializer = CustomUserShortSerializer()
+
+    class Meta:
+        """Customization of the class."""
+
+        model: Message = Message
+        fields: Tuple[str] = (
+            "id",
+            "datetime_created",
+            "content",
+            "owner",
+            "is_edited",
+        )
+
+    def get_is_edited(self, obj: Message) -> bool:
+        """Get is_edited."""
+        ONE_SECOND = 1.0
+        difference: timedelta = obj.datetime_updated - obj.datetime_created
+        if difference.total_seconds() > ONE_SECOND:
+            return True
+        return False
 
 
 class ChatMembersListSerailizer(ModelSerializer):
@@ -37,43 +71,12 @@ class ChatMembersListSerailizer(ModelSerializer):
         )
 
 
-class ChatSingleSerializer(ModelSerializer):
-    """Chat serializer for Single instance."""
-
-    members: SerializerMethodField = SerializerMethodField(
-        method_name="get_members"
-    )
-
-    class Meta:
-        """Class for serializer structure."""
-
-        model: Chat = Chat
-        fields: Tuple[str] = (
-            "id", "name", "slug",
-            "is_group", "datetime_created",
-            "photo_url", "is_deleted",
-            "members",
-        )
-
-    def get_members(self, obj: Chat):  # noqa
-        # qset = ChatMember.objects.filter(
-        #     chat_id=obj.id
-        # )
-        qset = Chat.objects.get_not_deleted().prefetch_related(
-            "members"
-        )
-        # breakpoint()
-        return [ChatMembersSerailizer(m).data for m in qset]
-
-
-class TrialModelChatSer(ModelSerializer):
-    class Meta:
-        model = Chat
-        fields = "__all__"
-
-
 class ChatOwnerSerializer(ModelSerializer):
+    """ChatOnwerSerializer."""
+
     class Meta:
+        """Customization of the ChatOwnerSerializer model."""
+
         model: CustomUser = CustomUser
         fields: Tuple[str] = (
             "id",
@@ -86,8 +89,8 @@ class ChatBaseSerializer(ModelSerializer):
     """Chat serializer by ModelSerializer class."""
 
     name: CharField = CharField()
-    slug: SlugField = SlugField()
-    is_group: BooleanField = BooleanField()
+    slug: SlugField = SlugField(read_only=True)
+    is_group: BooleanField = BooleanField(read_only=True)
     # photo_url: SerializerMethodField = SerializerMethodField(
     #     method_name="get_photo_url",
     # )
@@ -142,8 +145,33 @@ class ChatViewSerializer(ChatBaseSerializer):
         required=False,
         allow_null=True
     )
-
     owner: ChatOwnerSerializer = ChatOwnerSerializer()
+
+
+class ChatViewSingleSerializer(ChatViewSerializer):
+    """ChatViewSingleSerializer."""
+
+    messages: MessageModelSerializer = MessageModelSerializer(
+        # source="messages",
+        many=True
+    )
+
+    class Meta:
+        """Meta class which defines the logic."""
+
+        model: Chat = Chat
+        fields: Tuple[str] = (
+            "id",
+            "name",
+            "slug",
+            "is_group",
+            "datetime_created",
+            "photo",
+            "is_deleted",
+            "owner",
+            "members",
+            "messages",
+        )
 
 
 class ChatCreateSerializer(ChatBaseSerializer):
