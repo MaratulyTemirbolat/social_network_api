@@ -11,6 +11,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response as DRF_Response
 from rest_framework.request import Request as DRF_Request
 from rest_framework.generics import ListCreateAPIView
+from rest_framework import status
 
 from django.db.models import QuerySet
 
@@ -157,7 +158,7 @@ class CustomUserViewSet(DRFResponseHandler, ViewSet):
         )
 
 
-class CustomUserViewSetTrial(ViewSet):  # noqa
+class CustomUserViewSetTrial(DRFResponseHandler, ViewSet):  # noqa
     permission_classes: tuple = (
         permissions.AllowAny,
     )
@@ -167,16 +168,56 @@ class CustomUserViewSetTrial(ViewSet):  # noqa
         CustomUser.objects.get_not_deleted()
     serializer_class: CustomUserSerializer = CustomUserSerializer
 
-    def list(self, request: DRF_Request) -> DRF_Response:
+    def get_instance(
+        self,
+        pk: int = 0,
+        is_deleted: bool = False
+    ) -> Optional[CustomUser]:
+        """Obtain the class instance by primary key."""
+        user: Optional[CustomUser] = None
+        try:
+            user = self.get_queryset().get(id=pk)
+            return user
+        except CustomUser.DoesNotExist:
+            return None
+
+    def get_queryset(self) -> QuerySet[CustomUser]:
+        """Get not_deleted users."""
+        return self.queryset
+
+    def list(
+        self,
+        request: DRF_Request
+    ) -> DRF_Response:
         """Return list of all users."""
-        serializer: CustomUserSerializer = self.serializer_class(
-            self.queryset,
-            many=True
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.get_queryset(),
+            serializer_class=self.serializer_class,
+            many=True,
+            paginator=self.pagination_class()
         )
-        response: DRF_Response = DRF_Response(
-            {
-                "users": serializer.data
-            }
+        return response
+
+    def retrieve(
+        self,
+        request: DRF_Request,
+        pk: int = 0
+    ) -> DRF_Response:
+        """Process GET: /pk response for k-th user."""
+        user: Optional[CustomUser] = self.get_instance(pk=pk)
+        if not user:
+            return DRF_Response(
+                data={
+                    "response": f"Данный пользователь не найден с pk={pk}"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=user,
+            serializer_class=self.serializer_class,
+            many=False
         )
         return response
 

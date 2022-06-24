@@ -52,10 +52,17 @@ if settings.DEBUG:
 router: DefaultRouter = DefaultRouter(
     trailing_slash=False
 )
+# trial_router: DefaultRouter = DefaultRouter(
+#     trailing_slash=False
+# )
+
+# trial_router.register('chats', ChatViewSet)
+
 router.register('auths/users', CustomUserViewSetTrial)
 router.register('auths/phones', PhoneViewSet)
 router.register('chats/chats', ChatViewSet)
-
+# breakpoint()
+print(router.urls)
 urlpatterns += [
     path(
         'api/v1/',

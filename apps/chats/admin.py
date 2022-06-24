@@ -89,7 +89,7 @@ class ChatMemberAdmin(admin.ModelAdmin):  # noqa
         "id", "chat", "user",
     )
     search_fields: Sequence[str] = (
-        "chat_name",
+        "chat__name",
     )
 
 

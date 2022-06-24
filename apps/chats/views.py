@@ -3,6 +3,8 @@ from typing import (
     Optional,
     Tuple,
     Dict,
+    Set,
+    List,
 )
 
 from django.db.models import (
@@ -19,9 +21,11 @@ from rest_framework.permissions import (
 )
 from rest_framework.decorators import action
 from rest_framework import status
+from auths.models import CustomUser
 
 from chats.models import (
     Chat,
+    ChatMember,
 )
 from chats.serializers import (
     ChatCreateSerializer,
@@ -146,6 +150,7 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
             data=my_data,
             context={"request": request}
         )
+
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -196,3 +201,100 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
         serializer.save()
 
         return DRF_Response(data=serializer.data)
+
+    @action(
+        methods=["post"],
+        detail=True,
+        url_path="add_members"
+    )
+    def add_friends(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Any,
+        **kwargs: Any
+    ) -> DRF_Response:
+        """POST-request for friends adding to the chat."""
+        chat: Optional[Chat] = self.get_instance(pk=pk)
+        if not chat:
+            return DRF_Response(
+                data={
+                    "response": f"Чат с ID {pk} не найдена, либо она удалена"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        chat_members_id: QuerySet = chat.members.values_list("id", flat=True)
+        required_members: Optional[List[int]] = request.data.get(
+            "members", None
+        )
+        if not required_members:
+            return DRF_Response(
+                data={
+                    "response": "Необходимо предоставить пользователей"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        member_difference: Set[int] = (
+            set(required_members) - set(chat_members_id)
+        )
+        resulted_members: QuerySet = CustomUser.objects.get_not_deleted().\
+            filter(id__in=member_difference).values_list(
+                "id",
+                "username"
+            )
+        added_people: List[ChatMember] = []
+
+        i: int
+        for i in range(resulted_members.count()):
+            added_people.append(
+                ChatMember(
+                    chat_id=chat.id,
+                    user_id=resulted_members[i][0],
+                    chat_name=resulted_members[i][1]
+                )
+            )
+        ChatMember.objects.bulk_create(added_people)
+
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=chat,
+            serializer_class=self.serializer_class,
+            many=False
+        )
+        return response
+
+    @action(
+        methods=["post"],
+        detail=True,
+        url_path="remove_members"
+    )
+    def remove_friends(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Any,
+        **kwargs: Any
+    ) -> DRF_Response:
+        """POST-request to remove friends from chat by id."""
+        chat: Optional[Chat] = self.get_instance(pk=pk)
+        if not chat:
+            return DRF_Response(
+                data={
+                    "response": f"Чат с ID {pk} не найдена, либо она удалена"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        chat_members_id: QuerySet = chat.members.values_list("id", flat=True)
+        required_members: Optional[List[int]] = request.data.get(
+            "members", None
+        )
+        if not required_members:
+            return DRF_Response(
+                data={
+                    "response": "Необходимо предоставить пользователей"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
