@@ -21,8 +21,8 @@ from rest_framework.permissions import (
 )
 from rest_framework.decorators import action
 from rest_framework import status
-from auths.models import CustomUser
 
+from auths.models import CustomUser
 from chats.models import (
     Chat,
     ChatMember,
@@ -32,11 +32,14 @@ from chats.serializers import (
     ChatViewSerializer,
     ChatViewSingleSerializer,
 )
-from abstracts.handlers import DRFResponseHandler
+from abstracts.handlers import (
+    DRFResponseHandler,
+    NoneDataHandler,
+)
 from abstracts.paginators import AbstractPageNumberPaginator
 
 
-class ChatViewSet(DRFResponseHandler, ViewSet):
+class ChatViewSet(NoneDataHandler, DRFResponseHandler, ViewSet):
     """Chat class ViewSet."""
 
     queryset: QuerySet[Chat] = \
@@ -216,25 +219,25 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
     ) -> DRF_Response:
         """POST-request for friends adding to the chat."""
         chat: Optional[Chat] = self.get_instance(pk=pk)
-        if not chat:
-            return DRF_Response(
-                data={
-                    "response": f"Чат с ID {pk} не найдена, либо она удалена"
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=chat,
+            message=f"Чат с ID {pk} не найдена, либо она удалена",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
 
         chat_members_id: QuerySet = chat.members.values_list("id", flat=True)
         required_members: Optional[List[int]] = request.data.get(
             "members", None
         )
-        if not required_members:
-            return DRF_Response(
-                data={
-                    "response": "Необходимо предоставить пользователей"
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        response = self.get_none_response(
+            object=required_members,
+            message="Необходимо предоставить пользователей",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
 
         member_difference: Set[int] = (
             set(required_members) - set(chat_members_id)
@@ -257,7 +260,7 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
             )
         ChatMember.objects.bulk_create(added_people)
 
-        response: DRF_Response = self.get_drf_response(
+        response = self.get_drf_response(
             request=request,
             data=chat,
             serializer_class=self.serializer_class,
@@ -279,22 +282,35 @@ class ChatViewSet(DRFResponseHandler, ViewSet):
     ) -> DRF_Response:
         """POST-request to remove friends from chat by id."""
         chat: Optional[Chat] = self.get_instance(pk=pk)
-        if not chat:
-            return DRF_Response(
-                data={
-                    "response": f"Чат с ID {pk} не найдена, либо она удалена"
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=chat,
+            message=f"Чат с ID {pk} не найдена, либо он удален",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
 
-        chat_members_id: QuerySet = chat.members.values_list("id", flat=True)
         required_members: Optional[List[int]] = request.data.get(
             "members", None
         )
-        if not required_members:
-            return DRF_Response(
-                data={
-                    "response": "Необходимо предоставить пользователей"
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        response = self.get_none_response(
+            object=required_members,
+            message="Необходимо предоставить пользователей",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        ChatMember.objects.filter(
+            chat_id=chat.id,
+            user__in=required_members
+        ).delete()
+
+        response = self.get_drf_response(
+            request=request,
+            data=chat,
+            serializer_class=ChatViewSingleSerializer,
+            many=False
+        )
+
+        return response
