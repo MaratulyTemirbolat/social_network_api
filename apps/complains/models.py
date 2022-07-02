@@ -1,9 +1,18 @@
 from django.db import models
 from django.utils.text import slugify
 
-from abstracts.models import AbstractDateTime
+from abstracts.models import (
+    AbstractDateTime,
+    AbstractDateTimeQuerySet
+)
 from auths.models import CustomUser
 from news.models import News
+
+
+class ComplainReasonQuerySet(AbstractDateTimeQuerySet):
+    """ComplainReasonQuerySet."""
+
+    pass
 
 
 class ComplainReason(AbstractDateTime):  # noqa
@@ -19,6 +28,7 @@ class ComplainReason(AbstractDateTime):  # noqa
         verbose_name="Url",
         help_text="URL для поиска причина жалобы по её наименованию"
     )
+    objects = ComplainReasonQuerySet.as_manager()
 
     class Meta:  # noqa
         verbose_name = "Причина жалобы"

@@ -31,6 +31,10 @@ from auths.views import (
 from chats.views import (
     ChatViewSet,
 )
+from complains.views import (
+    ComplainReasonViewSet,
+)
+
 
 urlpatterns = [
     path(settings.ADMIN_SITE_URL, admin.site.urls),
@@ -61,6 +65,7 @@ router: DefaultRouter = DefaultRouter(
 router.register('auths/users', CustomUserViewSetTrial)
 router.register('auths/phones', PhoneViewSet)
 router.register('chats/chats', ChatViewSet)
+router.register('complains/complain_reasons', ComplainReasonViewSet)
 # breakpoint()
 print(router.urls)
 urlpatterns += [
