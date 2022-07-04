@@ -12,7 +12,9 @@ from rest_framework.serializers import (
 
 from complains.models import (
     ComplainReason,
+    ComplainNews,
 )
+from auths.serializers import CustomUserShortSerializer
 
 
 class ComplainReasonSerializer(ModelSerializer):
@@ -45,3 +47,44 @@ class ComplainReasonSerializer(ModelSerializer):
         if obj.datetime_deleted:
             return True
         return False
+
+
+# Реализовать
+class ComplainNewsBaseSerializer(ModelSerializer):
+    """ComplainNewsSerializer."""
+
+    datetime_created: DateTimeField = DateTimeField(
+        format="%Y-%m-%d %H:%M",
+        default=datetime.now(),
+        read_only=True
+    )
+    is_deleted: SerializerMethodField = SerializerMethodField(
+        method_name="get_is_deleted"
+    )
+
+    class Meta:
+        """Customization of the class."""
+
+        model: ComplainNews = ComplainNews
+        fields: Tuple[str] = (
+            "id",
+            "content",
+            "datetime_created",
+            "is_deleted",
+            "news",
+            "reason",
+            "owner",
+        )
+
+    def get_is_deleted(self, obj: ComplainReason) -> bool:
+        """Resolution of is_deleted variable."""
+        if obj.datetime_deleted:
+            return True
+        return False
+
+
+class ComplainNewsDetailSerializer(ComplainNewsBaseSerializer):
+    """ComplainNewsDetailSerializer."""
+
+    owner: CustomUserShortSerializer = CustomUserShortSerializer()
+    reason: ComplainReasonSerializer = ComplainReasonSerializer()

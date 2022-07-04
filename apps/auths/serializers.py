@@ -10,7 +10,6 @@ from rest_framework.serializers import (
     DateTimeField,
     CharField,
     ReadOnlyField,
-    SlugField,
     Serializer,
 )
 
