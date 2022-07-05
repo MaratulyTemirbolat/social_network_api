@@ -55,6 +55,11 @@ class GroupModel(admin.ModelAdmin):  # noqa
         'slug',
         "get_is_deleted",
     )
+    list_display_links: Tuple[str] = (
+        "id",
+        "name",
+        "slug",
+    )
     list_filter: Tuple[Any] = (
         CommonStateFilter,
     )
@@ -65,6 +70,7 @@ class GroupModel(admin.ModelAdmin):  # noqa
     search_fields: Tuple[str] = (
         "name", "slug",
     )
+    list_per_page: int = 10
 
     def get_readonly_fields(
         self,

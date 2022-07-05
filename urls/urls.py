@@ -33,6 +33,10 @@ from chats.views import (
 )
 from complains.views import (
     ComplainReasonViewSet,
+    ComplainNewsViewSet,
+)
+from groups.views import (
+    GroupViewSet,
 )
 
 
@@ -66,8 +70,10 @@ router.register('auths/users', CustomUserViewSetTrial)
 router.register('auths/phones', PhoneViewSet)
 router.register('chats/chats', ChatViewSet)
 router.register('complains/complain_reasons', ComplainReasonViewSet)
+router.register('complains/complain_news', ComplainNewsViewSet)
+router.register('groups/groups', GroupViewSet)
 # breakpoint()
-print(router.urls)
+# print(router.urls)
 urlpatterns += [
     path(
         'api/v1/',

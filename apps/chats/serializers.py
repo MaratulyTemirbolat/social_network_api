@@ -114,7 +114,6 @@ class ChatBaseSerializer(ModelSerializer):
             "is_group",
             "datetime_created",
             "photo",
-            # "photo_url",
             "is_deleted",
             "owner",
             "members",
