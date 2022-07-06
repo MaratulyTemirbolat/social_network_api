@@ -1,13 +1,15 @@
 from typing import (
     Tuple,
-    Dict,
     Optional,
     Any,
+    Sequence,
 )
 
 from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
 from django.utils.safestring import mark_safe
+from django.db.models import QuerySet
+from django.core.handlers.asgi import ASGIRequest
 
 from locations.models import (
     Country,
@@ -36,6 +38,7 @@ class CountryModel(admin.ModelAdmin):  # noqa
     search_fields: Tuple[str] = (
         "id", "name", "slug",
     )
+    list_per_page: int = 10
 
     def get_readonly_fields(
         self,
@@ -64,6 +67,7 @@ class CountryModel(admin.ModelAdmin):  # noqa
 
 @admin.register(City)
 class CityModel(admin.ModelAdmin):  # noqa
+    model: City = City
     readonly_fields: Tuple[str] = (
         "datetime_deleted",
         "datetime_updated",
@@ -83,9 +87,14 @@ class CityModel(admin.ModelAdmin):  # noqa
     list_display_links: Tuple[str] = (
         "id", "name",
     )
-    list_editable: Tuple[str] = (
+    list_select_related: Sequence[str] = (
         "country",
     )
+    list_per_page: int = 10
+
+    def get_queryset(self, request: ASGIRequest) -> QuerySet:
+        """Get queryset."""
+        return self.model.objects.all().select_related("country")
 
     def get_readonly_fields(
         self,
