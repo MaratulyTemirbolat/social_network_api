@@ -67,7 +67,7 @@ class ChatViewSet(NoneDataHandler, DRFResponseHandler, ViewSet):
     def get_queryset(self) -> QuerySet:
         """Queryset method for ORM."""
         return self.queryset.get_not_deleted().prefetch_related(
-            "members"
+            "chatmember_set"
         ).select_related("owner")
 
     @action(

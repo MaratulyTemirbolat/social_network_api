@@ -1,4 +1,3 @@
-from enum import IntFlag
 from typing import (
     Optional,
     Tuple,
@@ -259,7 +258,6 @@ class GroupViewSet(NoneDataHandler, DRFResponseHandler, ViewSet):
         )
         if response:
             return response
-
 
         found_people: QuerySet[CustomUser] = group.followers.filter(
             id__in=required_followers

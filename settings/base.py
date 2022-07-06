@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
 AUTH_USER_MODEL = 'auths.CustomUser'
+
 # ----------------------------------------------------------
 # Apps
 #
@@ -24,6 +25,7 @@ DJANGO_AND_THIRD_PARTY_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'channels',
     'corsheaders',
     'django_extensions',
     'rest_framework',
@@ -39,8 +41,12 @@ PROJECT_APPS = [
     'videos.apps.VideosConfig',
     'complains.apps.ComplainsConfig',
     'photos.apps.PhotosConfig',
+
+    # Temporary MVC apps
+    'temp_core.apps.TempCoreConfig',
 ]
 INSTALLED_APPS = DJANGO_AND_THIRD_PARTY_APPS + PROJECT_APPS
+
 # ----------------------------------------------------------
 # Static | Media
 #
@@ -48,6 +54,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # ----------------------------------------------------------
 # Middleware | Templates | Validators
 #
@@ -92,6 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',  # noqa
     },
 ]
+
 # ----------------------------------------------------------
 # Internationalization
 #

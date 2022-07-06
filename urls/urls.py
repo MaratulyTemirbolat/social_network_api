@@ -43,6 +43,9 @@ from groups.views import (
 urlpatterns = [
     path(settings.ADMIN_SITE_URL, admin.site.urls),
     path("api/v1/pp", TrialApiView.as_view()),
+
+    # Temp paths
+    path('', include('temp_core.urls')),
 ] + static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT

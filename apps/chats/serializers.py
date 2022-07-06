@@ -32,7 +32,7 @@ class MessageModelSerializer(ModelSerializer):
         method_name="get_is_edited"
     )
     datetime_created: DateTimeField = DateTimeField(
-        format="%Y-%m-%d %H:%M:%s",
+        format="%Y-%m-%d %H:%M:%S",
         read_only=True
     )
     owner: CustomUserShortSerializer = CustomUserShortSerializer()
@@ -150,10 +150,10 @@ class ChatViewSerializer(ChatBaseSerializer):
 class ChatViewSingleSerializer(ChatViewSerializer):
     """ChatViewSingleSerializer."""
 
-    messages: MessageModelSerializer = MessageModelSerializer(
-        # source="messages",
-        many=True
-    )
+    # messages: MessageModelSerializer = MessageModelSerializer(
+    #     # source="messages",
+    #     many=True
+    # )
 
     class Meta:
         """Meta class which defines the logic."""
@@ -169,7 +169,7 @@ class ChatViewSingleSerializer(ChatViewSerializer):
             "is_deleted",
             "owner",
             "members",
-            "messages",
+            # "messages",
         )
 
 
@@ -177,3 +177,12 @@ class ChatCreateSerializer(ChatBaseSerializer):
     """Chat serializer by ModelSerializer class."""
 
     pass
+
+
+#             """
+#             SELECT chats_chat.id, chats_chat.name, auths_customuser.id,
+# auths_customuser.slug, chats_chat.datetime_created, chats_chat.photo, chats_chat.datetime_deleted, chats_chatmember.chat_name FROM chats_chatmember
+# JOIN chats_chat ON chats_chat.id = chats_chatmember.chat_id JOIN 
+# auths_customuser ON auths_customuser.id = chats_chatmember.user_id"""
+
+#   Chat <- ChatMember (chat_name) -> CustomUser
