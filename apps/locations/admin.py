@@ -38,6 +38,9 @@ class CountryModel(admin.ModelAdmin):  # noqa
     search_fields: Tuple[str] = (
         "id", "name", "slug",
     )
+    list_display_links: Tuple[str] = (
+        "id", "name", "slug",
+    )
     list_per_page: int = 10
 
     def get_readonly_fields(

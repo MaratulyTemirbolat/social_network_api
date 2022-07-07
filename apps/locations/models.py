@@ -1,3 +1,9 @@
+from typing import (
+    Tuple,
+    Any,
+    Dict,
+)
+
 from django.db import models
 from django.utils.text import slugify
 
@@ -60,3 +66,16 @@ class City(AbstractDateTime):  # noqa
         if self.is_capital:
             return f'Столица {self.country}, город {self.name}'
         return f'Город {self.name} в {self.country}'
+
+    def save(
+        self,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> None:
+        """Save method."""
+        if City.objects.get_not_deleted().filter(
+            country=self.country,
+            is_capital=True
+        ).exists():
+            self.is_capital = False
+        return super().save(*args, **kwargs)
