@@ -32,7 +32,10 @@ class CityBaseModelSerializer(ModelSerializer):
         """Customization of serializer."""
 
         model: City = City
-        fields: str = "__all__"
+        exclude: Tuple[str] = (
+            "datetime_updated",
+            "datetime_deleted",
+        )
 
     def get_is_deleted(self, obj: Country) -> bool:
         """Get if object deleted or not."""
@@ -55,6 +58,7 @@ class CityCountrySerializer(CityBaseModelSerializer):
         )
 
 
+# Country Serializers
 class CountryBaseModelSerializer(ModelSerializer):
     """CountryModelSerializer."""
 
@@ -109,3 +113,10 @@ class CountryDetailModelSerializer(CountryBaseModelSerializer):
             "is_deleted",
             "cities",
         )
+
+
+# City Serializer related to Country
+class CityDetailedSerializer(CityBaseModelSerializer):
+    """CityDetailedSerializer."""
+
+    country: CountryBaseModelSerializer = CountryBaseModelSerializer()

@@ -38,8 +38,9 @@ from complains.views import (
 from groups.views import (
     GroupViewSet,
 )
-from locations.views import(
+from locations.views import (
     CountryViewSet,
+    CityViewSet,
 )
 
 
@@ -79,6 +80,7 @@ router.register('complains/complain_reasons', ComplainReasonViewSet)
 router.register('complains/complain_news', ComplainNewsViewSet)
 router.register('groups/groups', GroupViewSet)
 router.register('locations/countries', CountryViewSet)
+router.register('locations/cities', CityViewSet)
 # breakpoint()
 # print(router.urls)
 urlpatterns += [

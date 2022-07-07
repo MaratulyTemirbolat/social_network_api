@@ -61,6 +61,12 @@ class City(AbstractDateTime):  # noqa
         ordering = (
             "-datetime_updated",
         )
+        constraints = [
+            models.UniqueConstraint(
+                name="%(app_label)s_%(class)s_unique_relationships",
+                fields=["country", "name"]
+            ),
+        ]
 
     def __str__(self) -> str:  # noqa
         if self.is_capital:

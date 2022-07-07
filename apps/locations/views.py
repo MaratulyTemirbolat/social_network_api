@@ -32,6 +32,8 @@ from locations.models import (
 from locations.serializers import (
     CountryBaseModelSerializer,
     CountryDetailModelSerializer,
+    CityBaseModelSerializer,
+    CityDetailedSerializer,
 )
 
 
@@ -257,6 +259,159 @@ class CountryViewSet(NoneDataHandler, DRFResponseHandler, ViewSet):
             return response
 
         serializer: CountryBaseModelSerializer = CountryBaseModelSerializer(
+            instance=instance,
+            data=request.data,
+            partial=is_partial
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return DRF_Response(
+            data=serializer.data,
+            status=status.HTTP_202_ACCEPTED
+        )
+
+    def partial_update(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PATCH method with provided id."""
+        kwargs['is_partial'] = True
+        return self.update(request, *args, **kwargs)
+
+
+class CityViewSet(NoneDataHandler, DRFResponseHandler, ViewSet):
+    """CityViewSet."""
+
+    queryset: QuerySet[City] = \
+        City.objects.all()
+    serializer_class: CityBaseModelSerializer = CityBaseModelSerializer
+    permission_classes: Tuple[Any] = (
+        AllowAny,
+    )
+    pagination_class: AbstractPageNumberPaginator = \
+        AbstractPageNumberPaginator
+
+    def get_instance(
+        self,
+        pk: int = 0,
+        is_deleted: bool = False
+    ) -> Optional[City]:
+        """Obtain the class instance by primary key."""
+        city: Optional[City] = None
+        try:
+            city = self.get_queryset().get(pk=pk)
+            return city
+        except City.DoesNotExist:
+            return None
+
+    def get_queryset(self) -> QuerySet:
+        """Queryset method for ORM requests."""
+        return self.queryset.get_not_deleted().select_related(
+            "country"
+        )
+
+    def list(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request to provide all cities."""
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.get_queryset(),
+            serializer_class=CityDetailedSerializer,
+            many=True,
+            paginator=self.pagination_class()
+        )
+        return response
+
+    def retrieve(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request with specified PK."""
+        city: Optional[City] = self.get_instance(pk=pk)
+
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=city,
+            message=f"Не нашел Город с ID: {pk}",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        response = self.get_drf_response(
+            request=request,
+            data=city,
+            serializer_class=CityDetailedSerializer,
+            many=False
+        )
+
+        return response
+
+    def create(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle POST-request for city."""
+        data_copy: QueryDict = request.data.copy()
+
+        serializer: CityBaseModelSerializer = self.serializer_class(
+            data=data_copy
+        )
+        valid: bool = serializer.is_valid()
+        if valid:
+            new_city: City = serializer.save()
+
+            response: DRF_Response = self.get_drf_response(
+                request=request,
+                data=new_city,
+                serializer_class=CityDetailedSerializer,
+                many=False
+            )
+            return response
+
+        return DRF_Response(
+            {'response': 'Объект не создан'}
+        )
+
+    def update(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PUT method with provided id."""
+        is_partial: bool = kwargs.pop('is_partial', False)
+
+        pk: Optional[str] = kwargs.get('pk', None)
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=pk,
+            message="Первичный ключ должен быть предоставлен",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        instance: Optional[City] = self.get_instance(pk=pk)
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=instance,
+            message=f'Не нашел такой город с ID: {pk}',
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        serializer: CityBaseModelSerializer = self.serializer_class(
             instance=instance,
             data=request.data,
             partial=is_partial
