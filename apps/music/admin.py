@@ -58,6 +58,7 @@ class PlaylistModel(admin.ModelAdmin):  # noqa
     list_filter: Tuple[Any] = (
         CommonStateFilter,
     )
+    list_per_page: int = 10
 
     def get_photo(self, obj: Optional[Playlist] = None) -> str:  # noqa
         if obj.photo:
@@ -130,6 +131,7 @@ class PerformerModel(admin.ModelAdmin):  # noqa
         "name",
         "surname",
     )
+    list_per_page: int = 10
 
     def get_is_deleted(self, obj: Optional[Playlist] = None) -> str:  # noqa
         if obj.datetime_deleted:

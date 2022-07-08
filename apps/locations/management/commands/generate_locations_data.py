@@ -6,26 +6,20 @@ from typing import (
     Any,
     Dict,
     List,
-    Optional,
 )
 
 from django.core.management.base import BaseCommand
-from django.utils.text import slugify
-from django.db.models import QuerySet
 
-from auths.models import CustomUser
 from locations.models import (
     Country,
     City
 )
-from abstracts.models import AbstractDateTimeQuerySet
 
 
 class Command(BaseCommand):
     """Custom command for filling up database.
-
     Generate Test data only for database.
-    For each App you create another own Command
+    For each App you create another own Command.
     """
 
     help = 'Custom command for filling up database.'
