@@ -1,38 +1,104 @@
-from django.core.handlers.wsgi import WSGIRequest
-from django.template import (
-    loader,
-    backends,
+from typing import (
+    Optional,
+    Tuple,
+    Any,
+    Dict,
 )
-from django.http import HttpResponse
+from datetime import datetime
+
+from django.db.models import (
+    Model,
+    QuerySet,
+)
 
 
-class HttpResponseMixin:
-    """Mixin for handling HTTP response rendering."""
+from rest_framework.serializers import (
+    SerializerMethodField,
+    DateTimeField,
+)
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser
+from rest_framework.request import Request as DRF_Request
+from rest_framework.response import Response as DRF_Response
+from rest_framework.pagination import BasePagination
 
-    content_type: str = 'text/html'
+from abstracts.models import AbstractDateTime
+from abstracts.handlers import DRFResponseHandler
 
-    def get_http_response(
+
+class AbstractDateTimeSerializerMixin:
+    """AbstractDateTimeSerializer."""
+
+    is_deleted: SerializerMethodField = SerializerMethodField(
+        method_name="get_is_deleted"
+    )
+    datetime_created: DateTimeField = DateTimeField(
+        format="%Y-%m-%d %H:%M",
+        default=datetime.now(),
+        read_only=True
+    )
+
+    def get_is_deleted(self, obj: AbstractDateTime) -> bool:
+        """Resolution of is_deleted variable."""
+        if obj.datetime_deleted:
+            return True
+        return False
+
+
+class ModelInstanceMixin:
+    """Mixin for getting instance that are inherited from Model."""
+
+    def get_instance_by_id(
         self,
-        request: WSGIRequest,
-        template_name: str,
-        context: dict = {}
-    ) -> HttpResponse:
-        """Get HTTP response."""
-        template: backends.django.Template =\
-            loader.get_template(
-                template_name
-            )
-        return HttpResponse(
-            template.render(
-                context,
-                request
-            ),
-            content_type=self.content_type
+        class_name: Model,
+        pk: int = 0,
+        is_deleted: bool = False
+    ) -> Optional[Model]:
+        """Obtain the class instance by primary key."""
+        object: Optional[Model] = None
+        try:
+            if not is_deleted:
+                object = class_name.objects.get_not_deleted().get(pk=pk)
+            else:
+                object = class_name.objects.get(pk=pk)
+            return object
+        except class_name.DoesNotExist:
+            return None
+
+
+class DeletedRequestMixin(DRFResponseHandler):
+    """AbstractDateTimeViewSet."""
+
+    queryset: Optional[QuerySet]
+    serializer_class: Optional[Any]
+    pagination_class: Optional[BasePagination]
+
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="deleted",
+        permission_classes=(
+            IsAdminUser,
         )
-        # NOTE: Alternative approach:
-        #       from django.shortcuts import render
-        #       return render(
-        #           request,
-        #           template_name='university/index.html',
-        #           context=context
-        #       )
+    )
+    def get_deleted_objects(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Get all deleted chats."""
+        if not self.queryset or \
+            not self.serializer_class or \
+                not self.pagination_class:
+            return DRF_Response(
+                data={"response": "Не все поля реализованы во ViewSet"}
+            )
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.queryset.get_deleted(),
+            serializer_class=self.serializer_class,
+            many=True,
+            paginator=self.pagination_class()
+        )
+        return response

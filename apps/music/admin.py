@@ -45,9 +45,14 @@ class PlaylistModel(admin.ModelAdmin):  # noqa
         "datetime_updated",
     )
     list_display: Tuple[str] = (
+        "id",
         "name",
         "get_photo",
         "get_is_deleted",
+    )
+    list_display_links: Tuple[str] = (
+        "id",
+        "name",
     )
     filter_horizontal: Sequence[str] = (
         "listeners",
@@ -185,7 +190,6 @@ class MusicModel(admin.ModelAdmin):  # noqa
     )
     list_filter: Tuple[Any] = (
         CommonStateFilter,
-        "performers",
     )
     list_display_links: Tuple[str] = (
         "id", "playlist",
