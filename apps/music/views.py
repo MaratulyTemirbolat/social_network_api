@@ -23,11 +23,14 @@ from rest_framework.decorators import action
 
 from music.models import (
     Music,
+    Performer,
     Playlist,
 )
 from music.serializers import (
     PlaylistBaseSerializer,
     PlaylistDetailSerializer,
+    PerformerBaseSerializer,
+    PerformerDetailSerializer,
 )
 from abstracts.handlers import NoneDataHandler
 from abstracts.paginators import AbstractPageNumberPaginator
@@ -231,3 +234,151 @@ class PlaylistViewSet(
             },
             status=status.HTTP_501_NOT_IMPLEMENTED
         )
+
+
+class PerformerViewSet(
+    NoneDataHandler,
+    ModelInstanceMixin,
+    DeletedRequestMixin,
+    ViewSet
+):
+    """PerformerViewSet."""
+
+    queryset: QuerySet[Performer] = \
+        Performer.objects.all()
+    serializer_class: PerformerBaseSerializer = PerformerBaseSerializer
+    permission_classes: Tuple[Any] = (
+        AllowAny,
+    )
+    pagination_class: AbstractPageNumberPaginator = \
+        AbstractPageNumberPaginator
+
+    def get_queryset(self) -> QuerySet:
+        """Queryset method for ORM requests."""
+        return self.queryset.get_not_deleted()
+
+    def list(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request to illustrate all performers."""
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=self.get_queryset(),
+            serializer_class=self.serializer_class,
+            many=True,
+            paginator=self.pagination_class()
+        )
+        return response
+
+    def retrieve(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request with specified ID."""
+        is_deleted: bool = kwargs.get("is_deleted", False)
+
+        performer: Optional[Performer] = self.get_instance_by_id(
+            Performer,
+            pk=pk,
+            is_deleted=is_deleted
+        )
+        response: Optional[DRF_Response] = self.get_none_response(
+            performer,
+            message=f"Исполнитель с ID {pk} не был найден",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if not response:
+            response = self.get_drf_response(
+                request=request,
+                data=performer,
+                serializer_class=PerformerDetailSerializer
+            )
+
+        return response
+
+    def create(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle POST-request to create new Performer."""
+        serializer: PerformerBaseSerializer = self.serializer_class(
+            data=request.data
+        )
+
+        valid: bool = serializer.is_valid()
+        if valid:
+            new_performer: Performer = serializer.save()
+
+            response: DRF_Response = self.get_drf_response(
+                request=request,
+                data=new_performer,
+                serializer_class=PerformerDetailSerializer
+            )
+            return response
+
+        return DRF_Response(
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def update(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PUT-request with provided ID."""
+        is_partial: bool = kwargs.get("pk", False)
+
+        pk: Optional[str] = kwargs.get('pk', None)
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=pk,
+            message="Первичный ключ должен быть предоставлен",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        instance: Optional[Performer] = self.get_instance_by_id(
+            class_name=Performer,
+            pk=pk
+        )
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=instance,
+            message=f'Не нашел такую страну с ID: {pk}',
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        serializer: PerformerBaseSerializer = PerformerBaseSerializer(
+            instance=instance,
+            data=request.data,
+            partial=is_partial
+        )
+        serializer.is_valid(raise_exception=True)
+        updated_performer: Performer = serializer.save()
+
+        return self.get_drf_response(
+            request=request,
+            data=updated_performer,
+            serializer_class=PerformerDetailSerializer
+        )
+
+    def partial_update(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PATCH method with provided id."""
+        kwargs['is_partial'] = True
+        return self.update(request, *args, **kwargs)

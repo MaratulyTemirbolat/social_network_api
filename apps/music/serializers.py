@@ -6,6 +6,7 @@ from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField,
     DateTimeField,
+    SlugField,
 )
 
 from music.models import (
@@ -16,6 +17,7 @@ from music.models import (
 from abstracts.mixins import AbstractDateTimeSerializerMixin
 
 
+# Performer Serializers
 class PerformerBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
     """PerformerBaseSerializer."""
 
@@ -23,6 +25,7 @@ class PerformerBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
         AbstractDateTimeSerializerMixin.datetime_created
     is_deleted: SerializerMethodField = \
         AbstractDateTimeSerializerMixin.is_deleted
+    slug: SlugField = SlugField(read_only=True)
 
     class Meta:
         """Customization of the Serializer."""
@@ -32,6 +35,8 @@ class PerformerBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
             "id",
             "username",
             "slug",
+            "name",
+            "surname",
             "datetime_created",
             "is_deleted",
         )
@@ -52,6 +57,7 @@ class MusicBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
         model: Music = Music
         fields: Tuple[str] = (
             "id",
+            "music",
             "performers",
             "datetime_created",
             "is_deleted",
@@ -107,4 +113,28 @@ class PlaylistDetailSerializer(PlaylistBaseSerializer):
             "datetime_created",
             "is_deleted",
             "songs",
+        )
+
+
+# Performer Serializers with MusicRequirements to be first
+class PerformerDetailSerializer(PerformerBaseSerializer):
+    """PerformerDetailSerializer for detail view."""
+
+    performer_songs: MusicDetailSerializer = MusicDetailSerializer(
+        many=True
+    )
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Performer = Performer
+        fields: Tuple[str] = (
+            "id",
+            "username",
+            "slug",
+            "name",
+            "surname",
+            "datetime_created",
+            "is_deleted",
+            "performer_songs",
         )
