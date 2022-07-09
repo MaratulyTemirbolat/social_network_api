@@ -55,13 +55,13 @@ class ModelInstanceMixin:
         is_deleted: bool = False
     ) -> Optional[Model]:
         """Obtain the class instance by primary key."""
-        object: Optional[Model] = None
+        obj: Optional[Model] = None
         try:
             if not is_deleted:
-                object = class_name.objects.get_not_deleted().get(pk=pk)
+                obj = class_name.objects.get_not_deleted()
             else:
-                object = class_name.objects.get(pk=pk)
-            return object
+                obj = class_name.objects.get_deleted()
+            return obj.get(pk=pk)
         except class_name.DoesNotExist:
             return None
 

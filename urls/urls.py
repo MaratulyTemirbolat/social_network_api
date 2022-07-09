@@ -45,6 +45,7 @@ from locations.views import (
 from music.views import (
     PlaylistViewSet,
     PerformerViewSet,
+    MusicViewSet,
 )
 
 
@@ -87,6 +88,7 @@ router.register('locations/countries', CountryViewSet)
 router.register('locations/cities', CityViewSet)
 router.register('music/playlists', PlaylistViewSet)
 router.register('music/performers', PerformerViewSet)
+router.register('music/music', MusicViewSet)
 # breakpoint()
 # print(router.urls)
 urlpatterns += [

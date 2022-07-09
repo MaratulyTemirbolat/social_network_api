@@ -87,12 +87,12 @@ class Music(AbstractDateTime):  # noqa
     performers = models.ManyToManyField(
         to=Performer,
         related_name="performer_songs",
-        verbose_name="Певцы"
+        verbose_name="Исполнители"
     )
     users = models.ManyToManyField(
         to=CustomUser,
         related_name="user_songs",
-        verbose_name="Пользователи",
+        verbose_name="Слушатели",
         blank=True
     )
 

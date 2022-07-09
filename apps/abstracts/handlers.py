@@ -11,6 +11,7 @@ from rest_framework.request import Request as DRF_Request
 from rest_framework.response import Response as DRF_Response
 from rest_framework.pagination import BasePagination
 from rest_framework.serializers import Serializer
+from rest_framework import status
 
 from django.db.models import QuerySet
 
@@ -53,7 +54,8 @@ class DRFResponseHandler:
         response: DRF_Response = DRF_Response(
             {
                 'data': serializer.data
-            }
+            },
+            status=status.HTTP_200_OK
         )
         return response
 

@@ -15,10 +15,14 @@ from music.models import (
     Performer,
 )
 from abstracts.mixins import AbstractDateTimeSerializerMixin
+from auths.serializers import CustomUserShortSerializer
 
 
 # Performer Serializers
-class PerformerBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
+class PerformerBaseSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
     """PerformerBaseSerializer."""
 
     datetime_created: DateTimeField = \
@@ -43,7 +47,10 @@ class PerformerBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
 
 
 # Music Serializers
-class MusicBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
+class MusicBaseSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
     """MusicBaseSerializer."""
 
     datetime_created: DateTimeField = \
@@ -59,21 +66,54 @@ class MusicBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
             "id",
             "music",
             "performers",
+            "playlist",
             "datetime_created",
             "is_deleted",
         )
 
 
-class MusicDetailSerializer(MusicBaseSerializer):
-    """MusicDetailSerializer."""
+class MusicListSerializer(MusicBaseSerializer):
+    """MusicListSerializer."""
 
     performers: PerformerBaseSerializer = PerformerBaseSerializer(
         many=True
     )
 
 
+class MusicDetailSerializer(MusicListSerializer):
+    """MusicDetailSerializer."""
+
+    users: CustomUserShortSerializer = CustomUserShortSerializer(
+        many=True
+    )
+    listeners_number: SerializerMethodField = SerializerMethodField(
+        method_name="get_listeners_number"
+    )
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Music = Music
+        fields: Tuple[str] = (
+            "id",
+            "music",
+            "performers",
+            "playlist",
+            "datetime_created",
+            "is_deleted",
+            "users",
+            "listeners_number",
+        )
+
+    def get_listeners_number(self, obj: Music) -> int:
+        return obj.users.count()
+
+
 # Playlist Serializers
-class PlaylistBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
+class PlaylistBaseSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
     """PlaylistBaseSerializer."""
 
     is_deleted: SerializerMethodField = \
@@ -97,7 +137,7 @@ class PlaylistBaseSerializer(AbstractDateTimeSerializerMixin, ModelSerializer):
 class PlaylistDetailSerializer(PlaylistBaseSerializer):
     """PlaylistDetailSerializer."""
 
-    songs: MusicDetailSerializer = MusicDetailSerializer(
+    songs: MusicListSerializer = MusicListSerializer(
         source="playlist_songs",
         many=True
     )
@@ -120,7 +160,7 @@ class PlaylistDetailSerializer(PlaylistBaseSerializer):
 class PerformerDetailSerializer(PerformerBaseSerializer):
     """PerformerDetailSerializer for detail view."""
 
-    performer_songs: MusicDetailSerializer = MusicDetailSerializer(
+    performer_songs: MusicListSerializer = MusicListSerializer(
         many=True
     )
 
