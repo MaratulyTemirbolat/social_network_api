@@ -1,5 +1,4 @@
 from typing import (
-    List,
     Optional,
     Any,
     Tuple,
@@ -39,7 +38,6 @@ from music.serializers import (
 from music.tools import is_music_file
 from abstracts.handlers import NoneDataHandler
 from abstracts.paginators import AbstractPageNumberPaginator
-from abstracts.models import AbstractDateTimeQuerySet
 from abstracts.mixins import (
     ModelInstanceMixin,
     DeletedRequestMixin,

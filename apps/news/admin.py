@@ -29,7 +29,7 @@ class TagAdmin(admin.ModelAdmin):  # noqa
         "slug",
     )
     list_display: Tuple[str] = (
-        "name", "slug",
+        "id", "name", "slug",
         "get_is_deleted",
     )
     list_filter: Tuple[Any] = (
@@ -39,6 +39,13 @@ class TagAdmin(admin.ModelAdmin):  # noqa
         "name",
         "slug",
     )
+    list_display_links: Tuple[str] = (
+        "id", "slug",
+    )
+    list_editable: Tuple[str] = (
+        "name",
+    )
+    list_per_page: int = 10
 
     def get_is_deleted(self, obj: Optional[Tag] = None) -> str:  # noqa
         if obj.datetime_deleted:
