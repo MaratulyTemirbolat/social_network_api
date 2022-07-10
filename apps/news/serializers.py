@@ -1,8 +1,4 @@
-from tokenize import group
-from typing import (
-    Tuple,
-    Any,
-)
+from typing import Tuple
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -17,6 +13,7 @@ from abstracts.mixins import (
 from news.models import (
     Tag,
     News,
+    Category,
 )
 
 
@@ -115,6 +112,53 @@ class TagDetailSerializer(TagBaseModelSerializer):
         fields: Tuple[str] = (
             "id",
             "name",
+            "slug",
+            "datetime_created",
+            "is_deleted",
+            "news",
+        )
+
+
+# Category Serializers
+class CategoryBaseModelSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer,
+):
+    """CategoryBaseModelSerializer."""
+
+    is_deleted: SerializerMethodField = \
+        AbstractDateTimeSerializerMixin.is_deleted
+    datetime_created: DateTimeField = \
+        AbstractDateTimeSerializerMixin.datetime_created
+    slug: SlugField = SlugField(read_only=True)
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Category = Category
+        fields: Tuple[str] = (
+            "id",
+            "title",
+            "slug",
+            "datetime_created",
+            "is_deleted",
+        )
+
+
+class CategoryDetailSerializer(CategoryBaseModelSerializer):
+    """CategoryDetailSerializer."""
+
+    news: NewsBaseSerializer = NewsBaseSerializer(
+        many=True
+    )
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Category = Category
+        fields: Tuple[str] = (
+            "id",
+            "title",
             "slug",
             "datetime_created",
             "is_deleted",

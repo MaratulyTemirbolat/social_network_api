@@ -49,6 +49,7 @@ from music.views import (
 )
 from news.views import (
     TagViewSet,
+    CategoryViewSet,
 )
 
 
@@ -93,6 +94,7 @@ router.register('music/playlists', PlaylistViewSet)
 router.register('music/performers', PerformerViewSet)
 router.register('music/music', MusicViewSet)
 router.register('news/tags', TagViewSet)
+router.register('news/categories', CategoryViewSet)
 # breakpoint()
 # print(router.urls)
 urlpatterns += [
