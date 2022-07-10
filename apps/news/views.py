@@ -25,7 +25,6 @@ from abstracts.mixins import (
 from abstracts.paginators import AbstractPageNumberPaginator
 from abstracts.handlers import NoneDataHandler
 from abstracts.models import AbstractDateTimeQuerySet
-
 from news.models import (
     Tag,
     Category,

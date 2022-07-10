@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 
 from videos.models import (
     Video,
+    VideoKeeper,
 )
 from abstracts.filters import (
     CommonStateFilter,
@@ -17,18 +18,13 @@ from abstracts.filters import (
 
 
 @admin.register(Video)
-class VideoModel(admin.ModelAdmin):  # noqa
+class VideoAdmin(admin.ModelAdmin):  # noqa
     fieldsets: Tuple[Tuple[str, Dict[str, Tuple[str]]]] = (
         ('Инормация о видео', {
             'fields': (
                 'name',
                 'video_file',
                 'owner',
-            )
-        }),
-        ('Люди, которые добавили видео', {
-            'fields': (
-                'keepers',
             )
         }),
         ('История новости', {
@@ -43,9 +39,6 @@ class VideoModel(admin.ModelAdmin):  # noqa
         "datetime_deleted",
         "datetime_updated",
         "datetime_created",
-    )
-    filter_horizontal: Tuple[str] = (
-        "keepers",
     )
     list_display: Tuple[str] = (
         "id", "name", "owner",
@@ -74,3 +67,19 @@ class VideoModel(admin.ModelAdmin):  # noqa
             )
     get_is_deleted.short_description = "Существование видео"
     get_is_deleted.empty_value_display = "Видео не удалено"
+
+
+@admin.register(VideoKeeper)
+class VideoKeeperAdmin(admin.ModelAdmin):
+    """VideoKeeperAdmin."""
+
+    list_display: Tuple[str] = (
+        "id", "user", "video",
+    )
+    search_fields: Tuple[str] = (
+        "id", "user__username",
+    )
+    list_display_links: Tuple[str] = (
+        "id", "user",
+    )
+    save_on_top: bool = True

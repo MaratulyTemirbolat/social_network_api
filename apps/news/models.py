@@ -139,7 +139,9 @@ class News(AbstractDateTime):  # noqa
         return super().save(*args, **kwargs)
 
 
-class Comment(AbstractDateTime):  # noqa
+class Comment(AbstractDateTime):
+    """Comment for NEWS."""
+
     content = models.TextField(
         verbose_name="Контент",
         help_text="Контент вашего комментария"
@@ -165,11 +167,13 @@ class Comment(AbstractDateTime):  # noqa
         help_text="Комментриуем какую новость"
     )
 
-    class Meta:  # noqa
+    class Meta:
+        """Setting of the Comment table."""
+
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
         ordering = (
-            "-datetime_updated",
+            "datetime_created",
         )
 
     def __str__(self) -> str:  # noqa

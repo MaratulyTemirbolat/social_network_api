@@ -7,6 +7,7 @@ logs
 static
 media
 temp_core
+migrations
 
 celerybeat.pid
 celerybeat-schedule

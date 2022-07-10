@@ -131,8 +131,8 @@ class Command(BaseCommand):
         # Получаем время в начале срабатывания кода, чтобы высчитать разницу
         start: datetime = datetime.now()
 
-        # self.__generate_groups(GROUPS_NUMBER)
-        # self.__generate_group_administrations(GROUPS_ADMINISTRATION_NUMBER)
+        self.__generate_groups(GROUPS_NUMBER)
+        self.__generate_group_administrations(GROUPS_ADMINISTRATION_NUMBER)
 
         # Выдаем время генерации данных
         print(

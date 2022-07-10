@@ -157,7 +157,7 @@ class Message(AbstractDateTime):  # noqa
         verbose_name = "Сообщение"
         verbose_name_plural = "Сообщения"
         ordering = (
-            "-datetime_created",
+            "datetime_created",
         )
 
     def __str__(self) -> str:  # noqa

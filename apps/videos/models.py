@@ -23,6 +23,8 @@ class Video(AbstractDateTime):  # noqa
     )
     keepers = models.ManyToManyField(
         to=CustomUser,
+        through="VideoKeeper",
+        through_fields=("video", "user"),
         blank=True,
         related_name="added_videos",
         verbose_name="Имеется пользователями"
@@ -37,3 +39,41 @@ class Video(AbstractDateTime):  # noqa
 
     def __str__(self) -> str:  # noqa
         return f'Видео {self.name}. Владелец {self.owner}'
+
+    def save(self, *args: tuple, **kwargs: dict) -> None:
+        """Save method for Video model."""
+        return super().save(*args, **kwargs)
+
+
+class VideoKeeper(models.Model):
+    """VideoKeeper."""
+
+    video = models.ForeignKey(
+        to=Video,
+        on_delete=models.RESTRICT,
+        verbose_name="Видео"
+    )
+    user = models.ForeignKey(
+        to=CustomUser,
+        on_delete=models.RESTRICT,
+        verbose_name="Пользователь"
+    )
+
+    class Meta:
+        """Customization of the Table."""
+
+        verbose_name = "Добавленное видео"
+        verbose_name_plural = "Добавленные видео"
+        ordering = (
+            "id",
+        )
+        constraints = [
+            models.UniqueConstraint(
+                fields=['video', 'user'],
+                name="unique_video_user"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        """Override methode str."""
+        return f"{self.user} {self.video}"
