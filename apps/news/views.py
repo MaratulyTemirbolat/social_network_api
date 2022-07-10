@@ -145,7 +145,7 @@ class TagViewSet(
         **kwargs: Dict[str, Any]
     ) -> DRF_Response:
         """Handle PUT-request with provided ID."""
-        is_partial: bool = kwargs.get("pk", False)
+        is_partial: bool = kwargs.get("is_partial", False)
 
         pk: Optional[str] = kwargs.get('pk', None)
         response: Optional[DRF_Response] = self.get_none_response(

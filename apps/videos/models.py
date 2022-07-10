@@ -4,6 +4,8 @@ from abstracts.models import AbstractDateTime
 from auths.models import (
     CustomUser,
 )
+from videos.validators import video_format_validator
+
 
 class Video(AbstractDateTime):  # noqa
     VIDEO_NAME_MAX_LEN = 250
@@ -13,7 +15,8 @@ class Video(AbstractDateTime):  # noqa
     )
     video_file = models.FileField(
         upload_to="documents/videos/%Y/%m/%d",
-        verbose_name="Видео файл"
+        verbose_name="Видео файл",
+        validators=[video_format_validator]
     )
     owner = models.ForeignKey(
         to=CustomUser,
@@ -39,10 +42,6 @@ class Video(AbstractDateTime):  # noqa
 
     def __str__(self) -> str:  # noqa
         return f'Видео {self.name}. Владелец {self.owner}'
-
-    def save(self, *args: tuple, **kwargs: dict) -> None:
-        """Save method for Video model."""
-        return super().save(*args, **kwargs)
 
 
 class VideoKeeper(models.Model):
@@ -72,6 +71,9 @@ class VideoKeeper(models.Model):
                 fields=['video', 'user'],
                 name="unique_video_user"
             ),
+        ]
+        index_together = [
+            ("video", "user"),
         ]
 
     def __str__(self) -> str:

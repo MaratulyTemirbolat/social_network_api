@@ -10,5 +10,5 @@ temp_core
 migrations
 
 celerybeat.pid
-celerybeat-schedule
+celerybeat-scheduleg
 db.sqlite3
