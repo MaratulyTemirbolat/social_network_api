@@ -9,6 +9,17 @@ SECRET_KEY = 'django-insecure-9($thm4ymln96+-lvny#(3!ewv_gtgp#evm@e8c*28#rpcc=0r
 ADMIN_SITE_URL = 'custom_admin/'
 
 # ------------------------------------------------
+# Email configuration
+#
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = ''  # your email
+EMAIL_HOST_PASSWORD = ''  # take from the GO file
+EMAIL_PORT = 587
+
+
+# ------------------------------------------------
 # Debug toolbar configuration
 #
 DEBUG_TOOLBAR_PANELS = [

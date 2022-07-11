@@ -52,6 +52,7 @@ from news.views import (
     NewsViewSet,
 )
 from videos.views import VideoViewSet
+from temp_core.views import register
 
 
 urlpatterns = [
@@ -59,6 +60,7 @@ urlpatterns = [
 
     # Temp paths
     path('', include('temp_core.urls')),
+    path('register/', register, name="register"),
 ] + static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT

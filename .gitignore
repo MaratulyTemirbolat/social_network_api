@@ -8,6 +8,7 @@ static
 media
 temp_core
 migrations
+templates
 
 celerybeat.pid
 celerybeat-scheduleg
