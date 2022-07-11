@@ -1,6 +1,7 @@
 from typing import (
     Tuple,
 )
+from datetime import datetime
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -11,6 +12,8 @@ from rest_framework.serializers import (
     CharField,
     ReadOnlyField,
     Serializer,
+    SerializerMethodField,
+    SlugField,
 )
 
 from auths.models import (
@@ -18,16 +21,20 @@ from auths.models import (
     Friends,
     Phone,
 )
+from abstracts.mixins import AbstractDateTimeSerializerMixin
 
 
-class NewPhoneSerializer(Serializer):
-    """NewPhoneSerializer."""
-
-    pass
-
-
-class PhoneSerializer(ModelSerializer):
+# Phone Serializers
+class PhoneBaseSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
     """PhoneSerializer."""
+
+    is_deleted: SerializerMethodField = \
+        AbstractDateTimeSerializerMixin.is_deleted
+    datetime_created: DateTimeField = \
+        AbstractDateTimeSerializerMixin.datetime_created
 
     class Meta:
         """Phone Serializer's setting."""
@@ -37,7 +44,104 @@ class PhoneSerializer(ModelSerializer):
             "id",
             "phone",
             "owner",
+            "is_deleted",
+            "datetime_created",
         )
+
+
+# Friend Serializers
+class FriendBaseSerializer(ModelSerializer):
+    """FrienBaseSerializer."""
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Friends = Friends
+        fields: Tuple[str] = (
+            "to_user",
+            "is_blocked",
+        )
+
+
+# CustomUser Serializers
+class CustomUserBaseSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
+    """CustomUserBaseSerializer."""
+
+    is_deleted: SerializerMethodField = \
+        AbstractDateTimeSerializerMixin.is_deleted
+    datetime_created: DateTimeField = \
+        AbstractDateTimeSerializerMixin.datetime_created
+    slug: SlugField = SlugField(read_only=True)
+    last_login: DateTimeField = DateTimeField(
+        format="%Y-%m-%d %H:%M",
+        read_only=True
+    )
+    is_active: BooleanField = BooleanField(
+        read_only=True
+    )
+    is_staff: BooleanField = BooleanField(
+        read_only=True
+    )
+    is_superuser: BooleanField = BooleanField(
+        read_only=True
+    )
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: CustomUser = CustomUser
+        fields: Tuple[str] = (
+            "id",
+            "username",
+            "slug",
+            "birthday",
+            "email",
+            "first_name",
+            "last_name",
+            "last_login",
+            "is_active",
+            "is_staff",
+            "is_deleted",
+            "datetime_created",
+            "is_superuser",
+        )
+
+
+class CustomUserDetailSerializer(CustomUserBaseSerializer):
+    """CustomUserDetailSerializer."""
+
+    phones: PhoneBaseSerializer = PhoneBaseSerializer(
+        many=True
+    )
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: CustomUser = CustomUser
+        fields: Tuple[str] = (
+            "id",
+            "username",
+            "slug",
+            "birthday",
+            "email",
+            "first_name",
+            "last_name",
+            "last_login",
+            "is_active",
+            "is_staff",
+            "is_deleted",
+            "datetime_created",
+            "phones",
+        )
+
+
+class NewPhoneSerializer(Serializer):
+    """NewPhoneSerializer."""
+
+    pass
 
 
 class FriendsSerializer(ModelSerializer):

@@ -9,6 +9,7 @@ from typing import (
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.handlers.wsgi import WSGIRequest
+from django.utils.safestring import mark_safe
 
 from auths.models import (
     CustomUser,
@@ -43,11 +44,6 @@ class CustomUserAdmin(UserAdmin):  # noqa
                 'user_permissions',
             )
         }),
-        # ('Взаимодействие с пользователями', {
-        #     'fields': (
-        #         'friendss',
-        #     )
-        # }),
         ('Данные времени', {
             'fields': (
                 'last_login',
@@ -102,6 +98,13 @@ class CustomUserAdmin(UserAdmin):  # noqa
         'is_active',
         'is_superuser',
         'last_login',
+        'get_is_deleted',
+    )
+    list_display_links: Tuple[str] = (
+        "id",
+        "email",
+        "username",
+        "slug",
     )
     list_filter: Tuple[str, Any] = (
         'is_superuser',
@@ -119,6 +122,7 @@ class CustomUserAdmin(UserAdmin):  # noqa
     filter_horizontal: Sequence[str] = (
         "user_permissions",
     )
+    list_per_page: int = 20
 
     def get_readonly_fields(
         self,
@@ -131,16 +135,38 @@ class CustomUserAdmin(UserAdmin):  # noqa
             'email',
         )
 
+    def get_is_deleted(self, obj: Optional[CustomUser] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return mark_safe(
+                '<p style="color:red; font-weight:bold; font-size:17px; margin:0;">\
+Пользователь удален</p>'
+            )
+        return mark_safe(
+                '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
+Пользователь не удален</p>'
+            )
+    get_is_deleted.short_description = "Существование видео"
+    get_is_deleted.empty_value_display = "Пользователь не удален"
+
 
 @admin.register(Friends)
 class FriendsAdmin(admin.ModelAdmin):  # noqa
     list_display: Tuple[str] = (
+        "id",
         "from_user",
         "to_user",
         "is_blocked",
     )
+    list_display_links: Tuple[str] = (
+        "id",
+        "from_user",
+        "to_user",
+    )
     list_filter: Tuple[str] = (
         "is_blocked",
+    )
+    search_fields: Sequence[str] = (
+        "from_user__username",
     )
 
 

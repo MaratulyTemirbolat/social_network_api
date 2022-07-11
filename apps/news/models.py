@@ -81,7 +81,7 @@ class News(AbstractDateTime):  # noqa
     )
     group = models.ForeignKey(
         to=Group,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
         related_name="group_news",
@@ -89,7 +89,7 @@ class News(AbstractDateTime):  # noqa
     )
     author = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
         related_name="published_news",
@@ -97,7 +97,7 @@ class News(AbstractDateTime):  # noqa
     )
     category = models.ForeignKey(
         to=Category,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="news",
         verbose_name="Категория"
     )
@@ -154,14 +154,14 @@ class Comment(AbstractDateTime):
     )
     commentator = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="comments",
         verbose_name="Владелец комментария",
         help_text="Тот, кто оставил комментарий"
     )
     news = models.ForeignKey(
         to=News,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="comments",
         verbose_name="Новость",
         help_text="Комментриуем какую новость"

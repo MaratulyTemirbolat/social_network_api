@@ -48,13 +48,13 @@ class ComplainReason(AbstractDateTime):  # noqa
 class ComplainNews(AbstractDateTime):  # noqa
     owner = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name='complains',
         verbose_name="Владелец жалобы"
     )
     reason = models.ForeignKey(
         to=ComplainReason,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="complains",
         verbose_name="Причина жалобы"
     )
@@ -63,7 +63,7 @@ class ComplainNews(AbstractDateTime):  # noqa
     )
     news = models.ForeignKey(
         to=News,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="n_complains",
         verbose_name="Новость"
     )

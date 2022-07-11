@@ -3,13 +3,9 @@ from typing import (
     Optional,
     Tuple,
     Dict,
-    List,
 )
 
-from django.db.models import (
-    QuerySet,
-    Model,
-)
+from django.db.models import QuerySet
 
 from rest_framework.viewsets import ViewSet
 from rest_framework.request import Request as DRF_Request

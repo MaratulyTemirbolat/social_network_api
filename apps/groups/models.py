@@ -129,17 +129,17 @@ class Role(AbstractDateTime):  # noqa
 class GroupAdministration(AbstractDateTime):  # noqa
     group = models.ForeignKey(
         to=Group,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Группа"
     )
     user = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Пользователь группы"
     )
     role = models.ForeignKey(
         to=Role,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Роль"
     )
 

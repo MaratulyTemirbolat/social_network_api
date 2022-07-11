@@ -46,7 +46,7 @@ class City(AbstractDateTime):  # noqa
     )
     country = models.ForeignKey(
         to=Country,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="attached_cities",
         verbose_name="Страна"
     )

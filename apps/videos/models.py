@@ -20,7 +20,7 @@ class Video(AbstractDateTime):  # noqa
     )
     owner = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="owned_videos",
         verbose_name="Владелец"
     )
@@ -49,12 +49,12 @@ class VideoKeeper(models.Model):
 
     video = models.ForeignKey(
         to=Video,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Видео"
     )
     user = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Пользователь"
     )
 

@@ -24,9 +24,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from auths.views import (
-    CustomUserViewSetTrial,
+    CustomUserViewSet,
     PhoneViewSet,
-    TrialApiView,
 )
 from chats.views import (
     ChatViewSet,
@@ -57,7 +56,6 @@ from videos.views import VideoViewSet
 
 urlpatterns = [
     path(settings.ADMIN_SITE_URL, admin.site.urls),
-    path("api/v1/pp", TrialApiView.as_view()),
 
     # Temp paths
     path('', include('temp_core.urls')),
@@ -84,7 +82,7 @@ router: DefaultRouter = DefaultRouter(
 
 # trial_router.register('chats', ChatViewSet)
 
-router.register('auths/users', CustomUserViewSetTrial)
+router.register('auths/users', CustomUserViewSet)
 router.register('auths/phones', PhoneViewSet)
 router.register('chats/chats', ChatViewSet)
 router.register('complains/complain_reasons', ComplainReasonViewSet)

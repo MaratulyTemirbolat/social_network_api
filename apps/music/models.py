@@ -80,7 +80,7 @@ class Music(AbstractDateTime):  # noqa
     )
     playlist = models.ForeignKey(
         to=Playlist,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="playlist_songs",
         verbose_name="Плэйлист"
     )

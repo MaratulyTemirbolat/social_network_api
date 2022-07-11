@@ -32,7 +32,7 @@ class Chat(AbstractDateTime):  # noqa
     )
     owner = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="owned_chats",
         verbose_name="Создатель чата"
     )
@@ -73,12 +73,12 @@ class ChatMember(models.Model):  # noqa
     CHAT_USER_NAME_MAX_LEN = 150
     chat = models.ForeignKey(
         to=Chat,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Чат"
     )
     user = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name="Пользователь"
     )
     chat_name = models.CharField(
@@ -142,13 +142,13 @@ class Message(AbstractDateTime):  # noqa
     )
     chat = models.ForeignKey(
         to=Chat,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="messages",
         verbose_name="Чат"
     )
     owner = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="messages",
         verbose_name="Владелец"
     )

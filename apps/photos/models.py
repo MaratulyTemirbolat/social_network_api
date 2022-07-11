@@ -34,7 +34,7 @@ class ProfilePhoto(AbstractDateTime):  # noqa
     )
     owner = models.ForeignKey(
         to=CustomUser,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         related_name="profile_photos",
         verbose_name="Владелец"
     )
@@ -44,7 +44,7 @@ class ProfilePhoto(AbstractDateTime):  # noqa
     )
     city = models.ForeignKey(
         to=City,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
         related_name="profile_photos",
