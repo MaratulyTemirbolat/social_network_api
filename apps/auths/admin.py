@@ -20,10 +20,8 @@ from auths.filters import CommonStateFilter
 
 
 @admin.register(CustomUser)
-class CustomUserAdmin(UserAdmin):  # noqa
-    # add_form = CustomUserCreationForm
-    # form = CustomUserChangeForm
-    # model = CustomUser
+class CustomUserAdmin(UserAdmin):
+    """CustomUserAdmin."""
 
     fieldsets: Tuple = (
         ('Личная инормация', {
@@ -145,12 +143,14 @@ class CustomUserAdmin(UserAdmin):  # noqa
                 '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
 Пользователь не удален</p>'
             )
-    get_is_deleted.short_description = "Существование видео"
+    get_is_deleted.short_description = "Существование пользователя"
     get_is_deleted.empty_value_display = "Пользователь не удален"
 
 
 @admin.register(Friends)
-class FriendsAdmin(admin.ModelAdmin):  # noqa
+class FriendsAdmin(admin.ModelAdmin):
+    """FriendsAdmin."""
+
     list_display: Tuple[str] = (
         "id",
         "from_user",
@@ -171,16 +171,40 @@ class FriendsAdmin(admin.ModelAdmin):  # noqa
 
 
 @admin.register(Phone)
-class PhoneAdmin(admin.ModelAdmin):  # noqa
+class PhoneAdmin(admin.ModelAdmin):
+    """PhoneAdmin."""
+
     readonly_fields: Sequence[str] = (
         "datetime_deleted",
         "datetime_updated",
         "datetime_created",
     )
     list_display: Tuple[str] = (
+        "id",
         "phone",
         "owner",
+        "get_is_deleted",
+    )
+    list_display_links: Tuple[str] = (
+        "id",
+        "phone",
     )
     search_fields: Tuple[str] = (
         "phone",
     )
+    list_filter: Tuple[Any] = (
+        CommonStateFilter,
+    )
+
+    def get_is_deleted(self, obj: Optional[Phone] = None) -> str:  # noqa
+        if obj.datetime_deleted:
+            return mark_safe(
+                '<p style="color:red; font-weight:bold; font-size:17px; margin:0;">\
+Телефон удален</p>'
+            )
+        return mark_safe(
+                '<p style="color:green; font-weight:bold;font-size:17px; margin:0;">\
+Телефон не удален</p>'
+            )
+    get_is_deleted.short_description = "Существование телефона"
+    get_is_deleted.empty_value_display = "Телефон не удален"

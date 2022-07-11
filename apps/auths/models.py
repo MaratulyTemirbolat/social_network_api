@@ -374,7 +374,7 @@ class Phone(AbstractDateTime):
         verbose_name = "Телефон"
         verbose_name_plural = "Телефоны"
         ordering = (
-            'datetime_created',
+            '-datetime_created',
         )
         constraints = [
             models.UniqueConstraint(

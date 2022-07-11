@@ -1,7 +1,6 @@
 from typing import (
     Tuple,
 )
-from datetime import datetime
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -11,9 +10,10 @@ from rest_framework.serializers import (
     DateTimeField,
     CharField,
     ReadOnlyField,
-    Serializer,
     SerializerMethodField,
     SlugField,
+    HiddenField,
+    CurrentUserDefault,
 )
 
 from auths.models import (
@@ -35,6 +35,9 @@ class PhoneBaseSerializer(
         AbstractDateTimeSerializerMixin.is_deleted
     datetime_created: DateTimeField = \
         AbstractDateTimeSerializerMixin.datetime_created
+    owner: HiddenField = HiddenField(
+        default=CurrentUserDefault()
+    )
 
     class Meta:
         """Phone Serializer's setting."""
@@ -138,12 +141,6 @@ class CustomUserDetailSerializer(CustomUserBaseSerializer):
         )
 
 
-class NewPhoneSerializer(Serializer):
-    """NewPhoneSerializer."""
-
-    pass
-
-
 class FriendsSerializer(ModelSerializer):
     """FriendsSerializer."""
 
@@ -213,3 +210,10 @@ class CustomUserShortSerializer(ModelSerializer):
             "username",
             "last_login",
         )
+
+
+# Phone Serializer that is related to the CustomUser
+class PhoneDetailSerializer(PhoneBaseSerializer):
+    """PhoneDetailSerializer."""
+
+    owner: CustomUserShortSerializer = CustomUserShortSerializer()

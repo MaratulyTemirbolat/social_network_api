@@ -15,7 +15,10 @@ from rest_framework import status
 
 from django.db.models import QuerySet, Q
 
-from auths.permissions import IsOwnerOrAdmin
+from auths.permissions import (
+    IsOwnerOrAdmin,
+    IsPhoneOwnerOrAdmin,
+)
 from auths.models import (
     CustomUser,
     Friends,
@@ -30,6 +33,7 @@ from auths.serializers import (
     PhoneBaseSerializer,
     CustomUserBaseSerializer,
     CustomUserDetailSerializer,
+    PhoneDetailSerializer,
 )
 from abstracts.paginators import (
     AbstractPageNumberPaginator,
@@ -38,10 +42,7 @@ from abstracts.mixins import (
     ModelInstanceMixin,
     DeletedRequestMixin,
 )
-from abstracts.handlers import (
-    DRFResponseHandler,
-    NoneDataHandler,
-)
+from abstracts.handlers import NoneDataHandler
 
 
 class CustomUserViewSet(
@@ -529,15 +530,16 @@ class CustomUserViewSet(
         )
 
 
-# ПРОБЛЕМЫ
-class PhoneViewSet(DRFResponseHandler, ViewSet):
+class PhoneViewSet(
+    ModelInstanceMixin,
+    NoneDataHandler,
+    DeletedRequestMixin,
+    ViewSet
+):
     """PhoneViewset."""
 
-    # permission_classes: tuple = (
-    #     permissions.IsAuthenticated,
-    # )
     permission_classes: tuple = (
-        permissions.AllowAny,
+        IsPhoneOwnerOrAdmin,
     )
     queryset: QuerySet[Phone] = \
         Phone.objects.all()
@@ -545,115 +547,215 @@ class PhoneViewSet(DRFResponseHandler, ViewSet):
     pagination_class: AbstractPageNumberPaginator = \
         AbstractPageNumberPaginator
 
-    def get_queryset(self) -> QuerySet[Phone]:  # noqa
-        return self.queryset.get_not_deleted()
+    def get_queryset(self) -> QuerySet[Phone]:
+        """Get not-deleted phones."""
+        return self.queryset.get_not_deleted()\
+            .select_related("owner")
 
     @action(
         methods=["get"],
         detail=False,
-        url_path="deleted_phones",
+        url_path="all",
         permission_classes=(
-            permissions.AllowAny,
+            permissions.IsAdminUser,
         )
     )
-    def get_deleted_phones(self, request: DRF_Request) -> DRF_Response:
-        """Handle POST-request to show custom-info about custom_users."""
-        response: DRF_Response = self.get_drf_response(
-            request=request,
-            data=self.queryset.get_deleted(),
-            serializer_class=self.serializer_class,
-            many=True,
-            paginator=self.pagination_class()
-        )
-        return response
-
-    def list(self, request: DRF_Request) -> DRF_Response:
+    def get_all_phones(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
         """Return list of all non-deleted phones."""
         response: DRF_Response = self.get_drf_response(
             request=request,
             data=self.get_queryset(),
-            serializer_class=self.serializer_class,
+            serializer_class=PhoneDetailSerializer,
             many=True,
             paginator=self.pagination_class()
         )
 
         return response
 
-    def retrieve(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
+    def retrieve(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
         """Handle GET-request with ID to show users phones."""
-        # Retrieving certain object
-        #
+        is_deleted: bool = request.data.get("is_deleted", False)
+        if not is_deleted:
+            is_deleted = kwargs.get("is_deleted", False)
+
         phone: Optional[Phone] = None
-        try:
-            phone = self.queryset.get(
-                id=pk
-            )
-        except Phone.DoesNotExist:
-            return DRF_Response(
-                {'response': 'Не нашел такой телефон'}
-            )
-        if phone.datetime_deleted:
-            return DRF_Response(
-                {'response': 'Данный телефон удален'}
-            )
-        response: DRF_Response = self.get_drf_response(
-            request=request,
-            data=phone,
-            serializer_class=self.serializer_class,
-            many=False
+        queryset: QuerySet[Phone]
+
+        if not is_deleted:
+            queryset = self.get_queryset()
+        else:
+            queryset = self.queryset.get_deleted()
+        phone = self.get_queryset_instance_by_id(
+            class_name=Phone,
+            queryset=queryset,
+            pk=pk
         )
+
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=phone,
+            message=f"Телефон с PK {pk} не найден или был удален",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if not response:
+            self.check_object_permissions(
+                request=request,
+                obj=phone
+            )
+            response = self.get_drf_response(
+                request=request,
+                data=phone,
+                serializer_class=PhoneDetailSerializer
+            )
         return response
 
-    # НЕ РАБОТАЕТ
-    def create(self, request: DRF_Request) -> DRF_Response:
+    def create(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
         """Handle POST-request to show custom_users."""
-        sent_data: dict = request.data.copy()
-        # sent_data["owner"] = request.user
-        sent_data["datetime_created"] = datetime.now()
-        # breakpoint()
-        serializer: PhoneBaseSerializer = \
-            self.serializer_class(
-                data=request.data
+        serializer: PhoneBaseSerializer = self.serializer_class(
+            data=request.data,
+            context={"request": request}
+        )
+        valid: bool = serializer.is_valid()
+        if valid:
+            new_phone: Phone = serializer.save()
+            response: DRF_Response = self.get_drf_response(
+                request=request,
+                data=new_phone,
+                serializer_class=PhoneDetailSerializer
             )
-        breakpoint()
-        if serializer.is_valid():
-            serializer.save()
-            return DRF_Response(
-                {'data': f'Объект {serializer.id} создан'}
-            )
+            return response
+
         return DRF_Response(
-            {'response': 'Объект не создан'}
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
         )
 
-    def destroy(self, request: DRF_Request, pk: int = 0) -> DRF_Response:
+    def destroy(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
         """Handle DELETE-request with ID to show custom_user."""
         phone: Optional[Phone] = None
-        try:
-            phone = self.get_queryset().get(
-                id=pk
-            )
-        except Phone.DoesNotExist:
-            return DRF_Response(
-                {'data': f'Объект с ID: {pk} не найден'}
-            )
 
-        phone.delete()
-        return DRF_Response(
-            {'data': f'Телефон {phone.phone} удален'}
+        phone = self.get_queryset_instance_by_id(
+            class_name=Phone,
+            queryset=self.get_queryset(),
+            pk=pk
         )
 
-    def update(self, request: DRF_Request, pk: int = None) -> DRF_Response:
-        """Handle PUT-request with ID to show custom_user."""
-        return DRF_Response(
-            {'response': 'Метод update'}
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=phone,
+            message=f"Телефон с PK {pk} не найден или был уже удален",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if not response:
+            self.check_object_permissions(
+                request=request,
+                obj=phone
+            )
+            phone.delete()
+            response = DRF_Response(
+                data={
+                    "response": f"Телефон {phone.phone} успешно удалён"
+                },
+                status=status.HTTP_200_OK
+            )
+        return response
+
+    def update(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle PUT-request with provided ID."""
+        is_partial: bool = kwargs.get("is_partial", False)
+
+        instance: Optional[Phone] = self.get_queryset_instance_by_id(
+            class_name=Phone,
+            queryset=self.get_queryset(),
+            pk=pk
+        )
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=instance,
+            message=f'Не нашел телефон с ID: {pk}',
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if response:
+            return response
+
+        self.check_object_permissions(
+            request=request,
+            obj=instance
+        )
+        serializer: PhoneBaseSerializer = self.serializer_class(
+            instance=instance,
+            data=request.data,
+            partial=is_partial,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        updated_video: Phone = serializer.save()
+
+        return self.get_drf_response(
+            request=request,
+            data=updated_video,
+            serializer_class=PhoneDetailSerializer
         )
 
     def partial_update(
         self,
         request: DRF_Request,
-        pk: int = 0
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
     ) -> DRF_Response:
         """Handle PATCH-request with ID to show custom_user."""
-        return DRF_Response(
-            {'response': 'Метод partial_update'}
+        kwargs['is_partial'] = True
+        return self.update(request, pk, *args, **kwargs)
+
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="my_phones",
+        permission_classes=(
+            permissions.IsAuthenticated,
         )
+    )
+    def get_user_phones(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwarg: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request with user id."""
+        phones: QuerySet[Phone] = self.queryset.filter(
+            owner=request.user
+        )
+        response: DRF_Response = self.get_drf_response(
+            request=request,
+            data=phones,
+            serializer_class=PhoneDetailSerializer,
+            many=True,
+            paginator=self.pagination_class()
+        )
+        return response

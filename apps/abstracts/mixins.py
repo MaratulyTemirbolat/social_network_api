@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request as DRF_Request
 from rest_framework.response import Response as DRF_Response
 from rest_framework.pagination import BasePagination
+from rest_framework import status
 
 from abstracts.models import AbstractDateTime
 from abstracts.handlers import DRFResponseHandler
@@ -106,7 +107,8 @@ class DeletedRequestMixin(DRFResponseHandler):
             not self.serializer_class or \
                 not self.pagination_class:
             return DRF_Response(
-                data={"response": "Не все поля реализованы во ViewSet"}
+                data={"response": "Не все поля реализованы во ViewSet"},
+                status=status.HTTP_501_NOT_IMPLEMENTED
             )
         response: DRF_Response = self.get_drf_response(
             request=request,
