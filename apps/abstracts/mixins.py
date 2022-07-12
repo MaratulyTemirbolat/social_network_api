@@ -106,6 +106,7 @@ class DeletedRequestMixin(DRFResponseHandler):
         if not self.queryset or \
             not self.serializer_class or \
                 not self.pagination_class:
+            breakpoint()
             return DRF_Response(
                 data={"response": "Не все поля реализованы во ViewSet"},
                 status=status.HTTP_501_NOT_IMPLEMENTED

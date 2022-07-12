@@ -25,6 +25,7 @@ class ChatAdmin(admin.ModelAdmin):  # noqa
     fields: Tuple[str] = (
         ("name", "slug",),
         "is_group", "photo",
+        "owner",
     )
     readonly_fields: Sequence[str] = (
         "datetime_created",

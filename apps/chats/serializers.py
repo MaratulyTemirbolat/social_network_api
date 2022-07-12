@@ -14,6 +14,8 @@ from rest_framework.serializers import (
     CharField,
     BooleanField,
     SerializerMethodField,
+    HiddenField,
+    CurrentUserDefault,
 )
 
 from auths.models import CustomUser
@@ -23,8 +25,139 @@ from chats.models import (
     ChatMember,
     Message,
 )
+from abstracts.mixins import AbstractDateTimeSerializerMixin
 
 
+# ChatMemberListSerializers
+class ChatMembersListSerailizer(ModelSerializer):
+    """Serializer class between Chat and its members."""
+
+    class Meta:
+        """Class for serializer structure."""
+
+        model: ChatMember = ChatMember
+        fields: Tuple[str] = (
+            "user",
+            "chat_name",
+        )
+
+
+class ChatMemberBaseModelSerializer(ModelSerializer):
+    """ChatMemberBaseModelSerializer."""
+
+    class Meta:
+        """Customization."""
+
+        model: ChatMember = ChatMember
+        fields: str = "__all__"
+
+
+# Chat serializers
+class ChatBaseModelSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
+    """ChatBaseModelSerializer."""
+
+    is_deleted: SerializerMethodField = \
+        AbstractDateTimeSerializerMixin.is_deleted
+    datetime_created: DateTimeField = \
+        AbstractDateTimeSerializerMixin.datetime_created
+    owner: HiddenField = HiddenField(default=CurrentUserDefault())
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Chat = Chat
+        fields: Tuple[str] = (
+            "id",
+            "name",
+            "slug",
+            "is_group",
+            "photo",
+            "owner",
+            "is_deleted",
+            "datetime_created",
+        )
+
+
+class ChatListSerializer(ChatBaseModelSerializer):
+    """ChatDetailSerializer."""
+
+    owner: CustomUserShortSerializer = CustomUserShortSerializer()
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Chat = Chat
+        fields: Tuple[str] = (
+            "id",
+            "name",
+            "slug",
+            "is_group",
+            "photo",
+            "owner",
+            "is_deleted",
+            "datetime_created",
+        )
+
+
+class ChatDetailSerializer(ChatListSerializer):
+    """ChatDetailSerializer."""
+
+    owner: CustomUserShortSerializer = CustomUserShortSerializer()
+    members: ChatMembersListSerailizer = ChatMembersListSerailizer(
+        source="chatmember_set",
+        many=True,
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Chat = Chat
+        fields: Tuple[str] = (
+            "id",
+            "name",
+            "slug",
+            "is_group",
+            "photo",
+            "owner",
+            "is_deleted",
+            "datetime_created",
+            "members",
+        )
+
+
+class ChatUpdateSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
+    """ChatBaseModelSerializer."""
+
+    is_deleted: SerializerMethodField = \
+        AbstractDateTimeSerializerMixin.is_deleted
+    datetime_created: DateTimeField = \
+        AbstractDateTimeSerializerMixin.datetime_created
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Chat = Chat
+        fields: Tuple[str] = (
+            "id",
+            "name",
+            "slug",
+            "is_group",
+            "photo",
+            "owner",
+            "is_deleted",
+            "datetime_created",
+        )
+
+
+#
 class MessageModelSerializer(ModelSerializer):
     """MessageModelSerializer."""
 
@@ -56,19 +189,6 @@ class MessageModelSerializer(ModelSerializer):
         if difference.total_seconds() > ONE_SECOND:
             return True
         return False
-
-
-class ChatMembersListSerailizer(ModelSerializer):
-    """Serializer class between Chat and its members."""
-
-    class Meta:
-        """Class for serializer structure."""
-
-        model: ChatMember = ChatMember
-        fields: Tuple[str] = (
-            "user",
-            "chat_name",
-        )
 
 
 class ChatOwnerSerializer(ModelSerializer):
@@ -133,56 +253,3 @@ class ChatBaseSerializer(ModelSerializer):
         if obj.datetime_deleted:
             return True
         return False
-
-
-class ChatViewSerializer(ChatBaseSerializer):
-    """Chat serializer by ModelSerializer class."""
-
-    members: ChatMembersListSerailizer = ChatMembersListSerailizer(
-        source="chatmember_set",
-        many=True,
-        required=False,
-        allow_null=True
-    )
-    owner: ChatOwnerSerializer = ChatOwnerSerializer()
-
-
-class ChatViewSingleSerializer(ChatViewSerializer):
-    """ChatViewSingleSerializer."""
-
-    # messages: MessageModelSerializer = MessageModelSerializer(
-    #     # source="messages",
-    #     many=True
-    # )
-
-    class Meta:
-        """Meta class which defines the logic."""
-
-        model: Chat = Chat
-        fields: Tuple[str] = (
-            "id",
-            "name",
-            "slug",
-            "is_group",
-            "datetime_created",
-            "photo",
-            "is_deleted",
-            "owner",
-            "members",
-            # "messages",
-        )
-
-
-class ChatCreateSerializer(ChatBaseSerializer):
-    """Chat serializer by ModelSerializer class."""
-
-    pass
-
-
-#             """
-#             SELECT chats_chat.id, chats_chat.name, auths_customuser.id,
-# auths_customuser.slug, chats_chat.datetime_created, chats_chat.photo, chats_chat.datetime_deleted, chats_chatmember.chat_name FROM chats_chatmember
-# JOIN chats_chat ON chats_chat.id = chats_chatmember.chat_id JOIN 
-# auths_customuser ON auths_customuser.id = chats_chatmember.user_id"""
-
-#   Chat <- ChatMember (chat_name) -> CustomUser

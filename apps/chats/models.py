@@ -55,7 +55,6 @@ class Chat(AbstractDateTime):  # noqa
     def save(self, *args: tuple, **kwargs: dict) -> None:  # noqa
         if self.slug:
             self.slug = slugify(self.slug)
-        # breakpoint()
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:  # noqa
