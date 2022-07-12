@@ -17,6 +17,7 @@ from rest_framework.serializers import (
     HiddenField,
     CurrentUserDefault,
 )
+from traitlets import default
 
 from auths.models import CustomUser
 from auths.serializers import CustomUserShortSerializer
@@ -63,6 +64,9 @@ class MessageBaseModelSerializer(
         AbstractDateTimeSerializerMixin.datetime_created
     is_deleted: SerializerMethodField = \
         AbstractDateTimeSerializerMixin.is_deleted
+    owner: HiddenField = HiddenField(
+        default=CurrentUserDefault()
+    )
 
     class Meta:
         """Customization of the Serializer."""
@@ -74,6 +78,7 @@ class MessageBaseModelSerializer(
             "owner",
             "is_deleted",
             "datetime_created",
+            "chat",
         )
 
 

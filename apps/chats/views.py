@@ -5,6 +5,7 @@ from typing import (
     Dict,
     Set,
     List,
+    Union,
 )
 
 from django.db.models import QuerySet
@@ -39,10 +40,7 @@ from chats.permissions import (
     IsMemberOrAdmin,
     IsOwnerOrAdmin,
 )
-from abstracts.handlers import (
-    NoneDataHandler,
-    DRFResponseHandler,
-)
+from abstracts.handlers import NoneDataHandler
 from abstracts.paginators import AbstractPageNumberPaginator
 from abstracts.mixins import (
     ModelInstanceMixin,
@@ -602,5 +600,129 @@ class ChatViewSet(
                 serializer_class=MessageListSerializer,
                 many=True,
                 paginator=self.pagination_class()
+            )
+        return response
+
+
+class MessageViewSet(
+    ModelInstanceMixin,
+    NoneDataHandler,
+    DeletedRequestMixin,
+    ViewSet
+):
+    """MessageViewSet."""
+
+    queryset: QuerySet[Message] = \
+        Message.objects.all()
+    serializer_class: MessageBaseModelSerializer = MessageBaseModelSerializer
+    permission_classes: Tuple[Any] = (
+        IsMemberOrAdmin,
+    )
+    pagination_class: AbstractPageNumberPaginator = \
+        AbstractPageNumberPaginator
+
+    def get_queryset(self) -> QuerySet:
+        """Get not-deleted messages."""
+        return self.queryset.get_not_deleted()
+
+    def retrieve_chat(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> Optional[Union[DRF_Response, Chat]]:
+        """Get chat."""
+        chat_id: Optional[int] = request.data.get("chat", None)
+        if not chat_id or not isinstance(chat_id, int):
+            return DRF_Response(
+                data={
+                    "response": "Необходимо предоставить 'chat'"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        chat: Optional[Chat] = None
+
+        chat = self.get_queryset_instance_by_id(
+            class_name=Chat,
+            queryset=Chat.objects.get_not_deleted(),
+            pk=chat_id
+        )
+        return chat
+
+    def list(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request with chat_id to get messages."""
+        chat: Optional[Union[Chat, DRF_Response]] = self.retrieve_chat(
+            request,
+            *args,
+            **kwargs
+        )
+        if isinstance(chat, DRF_Response):
+            return chat
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=chat,
+            message=f"Чат с PK {chat.id} не найден или был удален",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if not response:
+            self.check_object_permissions(
+                request=request,
+                obj=chat
+            )
+            response = self.get_drf_response(
+                request=request,
+                data=self.get_queryset().filter(chat=chat),
+                serializer_class=MessageListSerializer,
+                many=True,
+                paginator=self.pagination_class()
+            )
+        return response
+
+    def create(
+        self,
+        request: DRF_Request,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle POST-request to create new message."""
+        chat: Optional[Union[Chat, DRF_Response]] = self.retrieve_chat(
+            request,
+            *args,
+            **kwargs
+        )
+        if isinstance(chat, DRF_Response):
+            return chat
+
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=chat,
+            message=f"Чат с PK {chat.id} не найден или был удален",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if not response:
+            self.check_object_permissions(
+                request=request,
+                obj=chat
+            )
+            serializer: MessageBaseModelSerializer = self.serializer_class(
+                data=request.data,
+                context={"request": request}
+            )
+            valid: bool = serializer.is_valid()
+            if valid:
+                new_message: Message = serializer.save()
+                response = self.get_drf_response(
+                    request=request,
+                    data=new_message,
+                    serializer_class=self.serializer_class
+                )
+                return response
+            return DRF_Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
         return response

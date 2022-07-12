@@ -29,6 +29,7 @@ from auths.views import (
 )
 from chats.views import (
     ChatViewSet,
+    MessageViewSet,
 )
 from complains.views import (
     ComplainReasonViewSet,
@@ -85,6 +86,7 @@ router: DefaultRouter = DefaultRouter(
 router.register('auths/users', CustomUserViewSet)
 router.register('auths/phones', PhoneViewSet)
 router.register('chats/chats', ChatViewSet)
+router.register('chats/messages', MessageViewSet)
 router.register('complains/complain_reasons', ComplainReasonViewSet)
 router.register('complains/complain_news', ComplainNewsViewSet)
 router.register('groups/groups', GroupViewSet)
