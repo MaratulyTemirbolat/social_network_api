@@ -25,12 +25,15 @@ from auths.models import CustomUser
 from chats.models import (
     Chat,
     ChatMember,
+    Message,
 )
 from chats.serializers import (
     ChatBaseModelSerializer,
     ChatListSerializer,
     ChatDetailSerializer,
     ChatUpdateSerializer,
+    MessageBaseModelSerializer,
+    MessageListSerializer,
 )
 from chats.permissions import (
     IsMemberOrAdmin,
@@ -554,5 +557,50 @@ class ChatViewSet(
                     "response": f"Вы изменили ник с {old_name} на {chat_name}",
                 },
                 status=status.HTTP_200_OK
+            )
+        return response
+
+    @action(
+        methods=["get"],
+        detail=True,
+        url_path="messages",
+        permission_classes=(
+            IsMemberOrAdmin,
+        )
+    )
+    def get_messages(
+        self,
+        request: DRF_Request,
+        pk: int = 0,
+        *args: Tuple[Any],
+        **kwargs: Dict[str, Any]
+    ) -> DRF_Response:
+        """Handle GET-request to see all messages."""
+        chat: Optional[Chat] = None
+
+        chat = self.get_queryset_instance_by_id(
+            class_name=Chat,
+            queryset=self.get_queryset(),
+            pk=pk
+        )
+        response: Optional[DRF_Response] = self.get_none_response(
+            object=chat,
+            message=f"Чат с PK {pk} не найден или был удален",
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        if not response:
+            self.check_object_permissions(
+                request=request,
+                obj=chat
+            )
+            messages: QuerySet[Message] = chat.messages\
+                .get_not_deleted()\
+                .select_related("owner")
+            response = self.get_drf_response(
+                request=request,
+                data=messages,
+                serializer_class=MessageListSerializer,
+                many=True,
+                paginator=self.pagination_class()
             )
         return response

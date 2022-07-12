@@ -52,6 +52,37 @@ class ChatMemberBaseModelSerializer(ModelSerializer):
         fields: str = "__all__"
 
 
+# Message Serializers
+class MessageBaseModelSerializer(
+    AbstractDateTimeSerializerMixin,
+    ModelSerializer
+):
+    """MessageBaseModelSerializer."""
+
+    datetime_created: DateTimeField = \
+        AbstractDateTimeSerializerMixin.datetime_created
+    is_deleted: SerializerMethodField = \
+        AbstractDateTimeSerializerMixin.is_deleted
+
+    class Meta:
+        """Customization of the Serializer."""
+
+        model: Message = Message
+        fields: Tuple[str] = (
+            "id",
+            "content",
+            "owner",
+            "is_deleted",
+            "datetime_created",
+        )
+
+
+class MessageListSerializer(MessageBaseModelSerializer):
+    """MessageListSerializer."""
+
+    owner: CustomUserShortSerializer = CustomUserShortSerializer()
+
+
 # Chat serializers
 class ChatBaseModelSerializer(
     AbstractDateTimeSerializerMixin,
